@@ -2,15 +2,51 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>DashboardPROJECT-room</title>
-
-<style>
-  body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    frot-family:Arial,Helvetica,sans serif;
-    background: linear--gradient(to bottom,white,#3a86ff);
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>DashboardPROJECT-room</title>
+  <style>
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial, Helvetica, sans-serif;
+      background: linear-gradient(to bottom, white, #3a86ff);
+    }.container{
+  text-align:center;
+  background: rgba(255,255,255,0.85);
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
+
+h1{
+  margin-bottom:20px;
+}
+
+button{
+  padding:12px 24px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:#3a86ff;
+  color:white;
+}
+
+button:hover{
+  background:#265ecf;
+}
+
+  </style>
+</head><body>
+  <div class="container">
+    <h1>My Game</h1>
+    <button onclick="startGame()">Start</button>
+  </div>  <script>
+    function startGame(){
+      alert("Game Start!");
+    }
+  </script></body>
+</html>v
