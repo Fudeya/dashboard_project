@@ -1,235 +1,149 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DashboardPROJECT-room</title>
+<title>Game Lobby</title>
 
 <style>
 
-/* ===== 整體背景 ===== */
 body{
-  margin:0;
-  height:100vh;
-  font-family:Arial, Helvetica, sans-serif;
+margin:0;
+height:100vh;
+overflow:hidden;
+font-family:sans-serif;
+color:white;
 
-  /* 暗色科技風 */
-  background:linear-gradient(
-    to bottom,
-    #050b1a,
-    #0a1f3f,
-    #102a5c
-  );
+/* 科技背景 */
+background:
+linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+linear-gradient(135deg,#020617,#0a1b3a);
 
-  overflow:hidden;
+background-size:40px 40px,40px 40px,cover;
+
+animation:gridMove 20s linear infinite;
 }
 
-/* ===== 科技格子背景 ===== */
-.square-layer{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
-
-  background-image:
-    linear-gradient(rgba(120,180,255,0.18) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120,180,255,0.18) 1px, transparent 1px);
-
-  background-size:70px 70px;
-
-  animation:
-    moveSquares 50s linear infinite,
-    glow 6s ease-in-out infinite;
+@keyframes gridMove{
+0%{
+background-position:0 0,0 0,0 0;
+}
+100%{
+background-position:-40px 40px,-40px 40px,0 0;
+}
 }
 
-/* 45度向左下移動 */
-@keyframes moveSquares{
-  from{
-    background-position:0 0,0 0;
-  }
-  to{
-    background-position:-300px 300px,-300px 300px;
-  }
+/* 玩家資訊 */
+
+.player{
+position:absolute;
+top:40px;
+left:40px;
+display:flex;
+align-items:center;
+gap:15px;
 }
 
-/* 呼吸發光效果 */
-@keyframes glow{
-  0%,100%{opacity:0.35}
-  50%{opacity:0.55}
-}
-
-/* ===== UI按鈕共通 ===== */
-.ui-button{
-  position:absolute;
-  padding:12px 22px;
-
-  background:#3a86ff;
-  color:white;
-
-  border:none;
-  border-radius:12px;
-
-  font-size:16px;
-  cursor:pointer;
-
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s,
-    background 0.2s;
-}
-
-.ui-button:hover{
-  transform:scale(1.15);
-  box-shadow:0 10px 25px rgba(0,0,0,0.45);
-  background:#4fa0ff;
-}
-
-/* ===== 玩家資訊 ===== */
 .avatar{
-  position:absolute;
-  top:30px;
-  left:30px;
-
-  width:70px;
-  height:70px;
-
-  border-radius:18px;
-  border:none;
-
-  background:white;
-
-  cursor:pointer;
-
-  transition:transform 0.2s;
+width:60px;
+height:60px;
+border-radius:15px;
+background:#ddd;
 }
 
-.avatar:hover{
-  transform:scale(1.15);
+.name{
+font-size:20px;
 }
 
-.player-name{
-  position:absolute;
-  top:35px;
-  left:120px;
-
-  font-size:22px;
-  color:white;
+.rank{
+opacity:0.6;
 }
 
-.rk{
-  position:absolute;
-  top:65px;
-  left:120px;
+/* 資源 */
 
-  color:#9ccaff;
-}
-
-/* ===== 貨幣 ===== */
-.currency{
-  position:absolute;
-  left:40px;
-  bottom:120px;
-
-  color:white;
+.resources{
+position:absolute;
+bottom:60px;
+left:60px;
 }
 
 .gold{
-  position:absolute;
-  left:40px;
-  bottom:80px;
-
-  color:#ffd866;
+color:#ffd54f;
 }
 
-/* ===== 六角形設定 ===== */
-.settings-hex{
-  position:absolute;
+/* 角色卡 */
 
-  top:42%;
-  left:46%;
-
-  width:90px;
-  height:90px;
-
-  background:#ffffff;
-
-  clip-path:polygon(
-    50% 0%,
-    100% 25%,
-    100% 75%,
-    50% 100%,
-    0% 75%,
-    0% 25%
-  );
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  cursor:pointer;
-
-  transition:transform 0.2s, box-shadow 0.2s;
-}
-
-.settings-hex:hover{
-  transform:scale(1.18);
-  box-shadow:0 10px 30px rgba(0,0,0,0.4);
-}
-
-/* ===== 右側主按鈕 ===== */
-.play{
-  top:36%;
-  right:120px;
-
-  font-size:20px;
-  padding:16px 30px;
-}
-
-.custom{
-  top:50%;
-  right:120px;
-}
-
-/* ===== 右下功能 ===== */
-.pokedex{
-  bottom:70px;
-  right:260px;
-}
-
-.shop{
-  bottom:70px;
-  right:140px;
-}
-
-/* ===== 角色展示 ===== */
 .character{
-  position:absolute;
-
-  bottom:40px;
-  left:50%;
-
-  transform:translateX(-50%);
-
-  width:150px;
-  height:200px;
-
-  background:rgba(255,255,255,0.08);
-
-  border-radius:20px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  color:white;
-
-  backdrop-filter:blur(4px);
-
-  transition:transform 0.3s;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:180px;
+height:230px;
+border-radius:20px;
+background:rgba(255,255,255,0.08);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:20px;
 }
 
-.character:hover{
-  transform:translateX(-50%) scale(1.05);
+/* 六邊形設定 */
+
+.settings{
+position:absolute;
+top:38%;
+left:50%;
+transform:translate(-50%,-50%);
+width:80px;
+height:80px;
+background:white;
+clip-path:polygon(
+25% 6%,
+75% 6%,
+100% 50%,
+75% 94%,
+25% 94%,
+0% 50%
+);
+display:flex;
+align-items:center;
+justify-content:center;
+color:black;
+}
+
+/* 右側選單 */
+
+.menu{
+position:absolute;
+right:120px;
+top:40%;
+display:flex;
+flex-direction:column;
+gap:30px;
+}
+
+.btn{
+padding:14px 30px;
+border-radius:12px;
+background:#4c8bf5;
+border:none;
+color:white;
+font-size:16px;
+cursor:pointer;
+transition:0.2s;
+}
+
+.btn:hover{
+transform:scale(1.1);
+background:#6aa6ff;
+}
+
+/* 底部按鈕 */
+
+.bottom-menu{
+display:flex;
+gap:20px;
 }
 
 </style>
@@ -237,33 +151,44 @@ body{
 
 <body>
 
-<!-- 科技格子背景 -->
-<div class="square-layer"></div>
-
-<!-- 玩家頭像 -->
-<button class="avatar"></button>
-
 <!-- 玩家資訊 -->
-<div class="player-name">Fudeya</div>
-<div class="rk">RK 0</div>
+<div class="player">
+<div class="avatar"></div>
+<div>
+<div class="name">Fudeya</div>
+<div class="rank">RK 0</div>
+</div>
+</div>
 
-<!-- 貨幣 -->
-<div class="currency">銅線: 0</div>
-<div class="gold">金元件: 0</div>
+<!-- 資源 -->
+<div class="resources">
+<div>銅幣: 0</div>
+<div class="gold">金元素: 0</div>
+</div>
 
 <!-- 設定 -->
-<div class="settings-hex">設定</div>
+<div class="settings">
+設定
+</div>
 
-<!-- 主功能 -->
-<button class="ui-button play">遊玩</button>
-<button class="ui-button custom">自製區</button>
+<!-- 角色 -->
+<div class="character">
+角色
+</div>
 
-<!-- 次功能 -->
-<button class="ui-button pokedex">圖鑑</button>
-<button class="ui-button shop">店</button>
+<!-- 右側選單 -->
+<div class="menu">
 
-<!-- 角色展示 -->
-<div class="character">角色</div>
+<button class="btn">遊玩</button>
+
+<button class="btn">自製區</button>
+
+<div class="bottom-menu">
+<button class="btn">圖鑑</button>
+<button class="btn">店</button>
+</div>
+
+</div>
 
 </body>
 </html>
