@@ -9,15 +9,12 @@
 body{
   margin:0;
   height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   font-family:Arial, Helvetica, sans-serif;
   background: linear-gradient(to bottom, white, #3a86ff);
   overflow:hidden;
 }
 
-/* 移動方塊圖層（45度向左下） */
+/* 背景格子 */
 .square-layer{
   position:fixed;
   inset:0;
@@ -42,52 +39,170 @@ body{
   }
 }
 
-.container{
-  position:relative;
-  z-index:1;
-  text-align:center;
-  background: rgba(255,255,255,0.85);
-  padding:40px;
-  border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
-}
-
-h1{
-  margin-bottom:20px;
-}
-
-button{
-  padding:12px 24px;
-  font-size:18px;
+/* 通用按鈕 */
+.ui-button{
+  position:absolute;
+  padding:12px 20px;
   border:none;
-  border-radius:10px;
-  cursor:pointer;
+  border-radius:12px;
   background:#3a86ff;
   color:white;
+  font-size:16px;
+  cursor:pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-button:hover{
-  background:#265ecf;
+.ui-button:hover{
+  transform:scale(1.12);
+  box-shadow:0 8px 20px rgba(0,0,0,0.25);
 }
+
+/* 頭像 */
+.avatar{
+  position:absolute;
+  top:30px;
+  left:30px;
+  width:70px;
+  height:70px;
+  border-radius:20px;
+  background:white;
+  border:none;
+  cursor:pointer;
+  transition: transform 0.2s ease;
+}
+
+.avatar:hover{
+  transform:scale(1.15);
+}
+
+/* 玩家資訊 */
+.player-name{
+  position:absolute;
+  top:35px;
+  left:120px;
+  font-size:20px;
+  color:#222;
+}
+
+.rk{
+  position:absolute;
+  top:65px;
+  left:120px;
+  font-size:16px;
+}
+
+/* 貨幣 */
+.currency{
+  position:absolute;
+  left:40px;
+  bottom:120px;
+  font-size:16px;
+}
+
+.gold{
+  position:absolute;
+  left:40px;
+  bottom:80px;
+  font-size:16px;
+}
+
+/* 中央設定六角形 */
+.settings-hex{
+  position:absolute;
+  top:40%;
+  left:45%;
+  width:80px;
+  height:80px;
+  background:white;
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform 0.2s ease;
+}
+
+.settings-hex:hover{
+  transform:scale(1.15);
+}
+
+/* 遊玩按鈕 */
+.play{
+  top:35%;
+  right:120px;
+}
+
+/* 自製區 */
+.custom{
+  top:48%;
+  right:120px;
+}
+
+/* 圖鑑 */
+.pokedex{
+  bottom:60px;
+  right:260px;
+}
+
+/* 商店 */
+.shop{
+  bottom:60px;
+  right:150px;
+}
+
+/* 角色展示 */
+.character{
+  position:absolute;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  width:140px;
+  height:180px;
+  background:rgba(255,255,255,0.7);
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+}
+
 </style>
-
 </head>
 
 <body>
 
-<!-- 背景方塊圖層 -->
 <div class="square-layer"></div>
 
-<div class="container">
-  <h1>My Game</h1>
-  <button onclick="startGame()">Start</button>
-</div>
+<!-- 頭像 -->
+<button class="avatar"></button>
 
-<script>
-function startGame(){
-  alert("Game Start!");
-}
-</script>
+<!-- 玩家資訊 -->
+<div class="player-name">Fudeya</div>
+<div class="rk">RK 0</div>
+
+<!-- 貨幣 -->
+<div class="currency">銅線: 0</div>
+<div class="gold">金元件: 0</div>
+
+<!-- 設定六角形 -->
+<div class="settings-hex">設定</div>
+
+<!-- 功能按鈕 -->
+<button class="ui-button play">遊玩</button>
+<button class="ui-button custom">自製區</button>
+
+<button class="ui-button pokedex">圖鑑</button>
+<button class="ui-button shop">店</button>
+
+<!-- 角色展示 -->
+<div class="character">角色</div>
 
 </body>
 </html>
