@@ -5,16 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Game Lobby - Fixed</title>
     <style>
-        /* --- 1. 核心定位修復 --- */
         html, body {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
-            overflow: hidden; /* 禁止任何捲動 */
-            position: fixed; /* 強制鎖定螢幕不准動 */
-            background: #020617; /* 預備底色 */
+            overflow: hidden; 
+            position: fixed; 
+            background: #020617;
+            font-family: sans-serif;
+            -webkit-text-size-adjust: 100%;
         }
 
-        /* --- 2. 專用的背景層 (解決背景消失問題) --- */
+        /* 背景層 */
         .bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
@@ -24,10 +25,9 @@
             animation: gridMove 20s linear infinite;
             z-index: -1;
         }
-
         @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: -40px 40px; } }
 
-        /* --- 3. UI 元素 --- */
+        /* UI 元素 */
         #tooltip {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             background: rgba(60, 60, 60, 0.85); backdrop-filter: blur(10px);
@@ -69,7 +69,7 @@
         .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.1); }
         .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; box-shadow: 0 0 30px rgba(255,255,255,0.4); }
 
-        /* --- 4. 彈窗與輸入框 --- */
+        /* 彈窗 */
         #profile-overlay {
             position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 500; display: none;
@@ -88,7 +88,8 @@
 </head>
 <body>
 
-    <div class="bg-layer"></div> <div id="tooltip"></div>
+    <div class="bg-layer"></div> 
+    <div id="tooltip"></div>
 
     <div id="profile-overlay">
         <div class="interactive close-btn" data-tip="關閉介面" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; border:1px solid white; cursor:pointer; color:white;">✕</div>
@@ -98,13 +99,13 @@
                 <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
                 <div class="interactive tab-btn" id="tab-code" data-tip="輸入兌換碼" onclick="switchTab('code')">兌換碼</div>
             </div>
-            <div id="tab-content" style="flex:1; padding-left:100px; display:flex; flex-direction:column; justify-content:center; color:white;"></div>
+            <div id="tab-content" style="flex:1; padding-left:100px; padding-top:50px; display:flex; flex-direction:column; justify-content:flex-start; color:white;"></div>
         </div>
     </div>
 
     <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
 
-    <div class="player" onclick="openProfile()">
+    <div class="player interactive" data-tip="個人資料" onclick="openProfile()">
         <div class="avatar"></div>
         <div>
             <div class="name" style="font-size: 30px; font-weight: bold;">Fudeya</div>
@@ -155,7 +156,7 @@
 
         function saveName() {
             const newName = document.getElementById('newNameInput').value;
-            if (newName.trim() !== "") {
+            if (newName && newName.trim() !== "") {
                 document.querySelector('.player .name').innerText = newName;
                 alert("名稱已更新為: " + newName);
             }
@@ -171,18 +172,7 @@
         }
 
         function handleMove(x, y) {
-            const isProfileOpen = profileOverlay.style.display === 'block';
             const hitEl = checkCollision(x, y);
-
-            if (isProfileOpen && hitEl && !profileOverlay.contains(hitEl)) {
-                if (currentActiveEl) {
-                    currentActiveEl.classList.remove('active-btn', 'active-settings');
-                    currentActiveEl = null;
-                    tooltip.style.opacity = '0';
-                }
-                return;
-            }
-
             if (hitEl !== currentActiveEl) {
                 if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
                 if (hitEl) {
@@ -195,28 +185,42 @@
             }
         }
 
-      // 核心修正：監聽視窗高度變化
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        const vh = window.visualViewport.height;
-        // 鍵盤彈出時，vh 會變小。我們強制讓整個內容物「縮小」或「下移」
-        document.documentElement.style.height = vh + "px";
-        
-        // 強制捲動到最頂端，不准 Safari 亂推
-        window.scrollTo(0, 0);
-    });
-}
+        // 觸摸與點擊跳轉修復
+        window.addEventListener('touchstart', (e) => {
+            if (activeFingerId === null) {
+                activeFingerId = e.changedTouches[0].identifier;
+                handleMove(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            }
+        }, { passive: false });
 
-// 針對輸入框點擊時的額外補強
-document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'INPUT') {
-        // 延遲一點點執行，防止 Safari 的預設推擠
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-        }, 100);
-    }
-});
+        window.addEventListener('touchmove', (e) => {
+            for (let t of e.changedTouches) {
+                if (t.identifier === activeFingerId) handleMove(t.clientX, t.clientY);
+            }
+            e.preventDefault(); // 鎖定滑動
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            for (let t of e.changedTouches) {
+                if (t.identifier === activeFingerId) {
+                    if (currentActiveEl) {
+                        const target = currentActiveEl.getAttribute('data-target');
+                        if (target) window.location.href = target;
+                        else currentActiveEl.click();
+                    }
+                    activeFingerId = null;
+                }
+            }
+        });
+
+        // 視窗與鍵盤修正
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + "px";
+                window.scrollTo(0, 0);
+            });
+        }
+        document.addEventListener('focusout', () => { window.scrollTo(0, 0); });
     </script>
 </body>
 </html>
