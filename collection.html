@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Library</title>
+    <style>
+        body {
+            margin: 0; height: 100vh; width: 100vw; overflow: hidden;
+            font-family: sans-serif; color: white;
+            background: linear-gradient(135deg,#051025,#020617);
+            user-select: none; -webkit-user-select: none; touch-action: none;
+            opacity: 0; /* 初始透明，用於淡入 */
+            transition: opacity 0.5s ease;
+        }
+
+        /* 標題區域 */
+        .header {
+            padding: 40px 60px;
+            font-size: 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* 圖鑑內容暫存區 */
+        .content {
+            display: flex; justify-content: center; align-items: center;
+            height: 60vh; font-size: 24px; opacity: 0.3;
+        }
+
+        /* 【左下角返回按鈕】 */
+        .back-btn {
+            position: absolute; bottom: 50px; left: 50px;
+            padding: 20px 50px; border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white; font-size: 20px;
+            cursor: pointer; transition: 0.2s;
+        }
+
+        .back-btn-active {
+            background: white !important; color: black !important;
+            transform: scale(1.1);
+        }
+
+        /* 離開時的淡出動畫 */
+        .fade-out { opacity: 0 !important; }
+    </style>
+</head>
+<body id="library-body">
+
+    <div class="header">圖鑑 / Collection</div>
+
+    <div class="content">
+        目前尚無收藏資料...
+    </div>
+
+    <button class="back-btn" id="back-button">返回大廳</button>
+
+    <script>
+        // 進入頁面淡入
+        window.onload = () => { document.body.style.opacity = '1'; };
+
+        const backBtn = document.getElementById('back-button');
+        let isTouching = false;
+
+        // 返回按鈕的簡單偵測 (左下角固定)
+        function checkBackBtn(x, y) {
+            const rect = backBtn.getBoundingClientRect();
+            return (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+        }
+
+        window.addEventListener('touchstart', e => {
+            if(checkBackBtn(e.touches[0].clientX, e.touches[0].clientY)) {
+                backBtn.classList.add('back-btn-active');
+                isTouching = true;
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            if(isTouching) {
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    window.location.href = 'index.html'; // 回大廳
+                }, 500);
+            }
+            backBtn.classList.remove('back-btn-active');
+            isTouching = false;
+        });
+    </script>
+</body>
+</html>
