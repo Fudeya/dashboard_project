@@ -5,7 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Game Lobby - Professional Version</title>
     <style>
-        /* --- 基礎鎖定與背景 --- */
+
+        <div id="profile-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:500;">
+    
+    <div class="interactive close-btn" data-tip="關閉介面" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; border:1px solid white; cursor:pointer;">✕</div>
+
+    <div style="display:flex; height:100%; padding:100px 150px;">
+        <div style="width:200px; display:flex; flex-direction:column; gap:20px; border-right:1px solid rgba(255,255,255,0.2);">
+            <div class="interactive tab-btn" id="tab-avatar" data-tip="修改頭像" onclick="switchTab('avatar')">頭像</div>
+            <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
+            <div class="interactive tab-btn" id="tab-code" data-tip="輸入兌換碼" onclick="switchTab('code')">兌換碼</div>
+        </div>
+
+        <div id="tab-content" style="flex:1; padding-left:100px; display:flex; flex-direction:column; justify-content:center;">
+            </div>
+    </div>
+</div>
+
+        /* 彈窗內的按鈕樣式 */
+.tab-btn {
+    padding: 20px; font-size: 22px; text-align: center; color: white;
+    background: rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; transition: 0.2s;
+}
+.tab-active { background: #4c8bf5 !important; box-shadow: 0 0 15px #4c8bf5; }
+
+.input-field {
+    width: 400px; padding: 15px; font-size: 20px; border-radius: 10px;
+    border: 1px solid #4c8bf5; background: rgba(0,0,0,0.5); color: white; margin-bottom: 20px;
+}
+
+.action-btn {
+    width: 150px; padding: 12px; border-radius: 8px; border: none;
+    font-size: 18px; cursor: pointer; transition: 0.2s;
+}
+.save-btn { background: #4c8bf5; color: white; }
+.confirm-btn { background: #ffd54f; color: black; }
+        
+        
+            /* --- 基礎鎖定與背景 --- */
         body {
             margin: 0; height: 100vh; width: 100vw; overflow: hidden;
             font-family: sans-serif; color: white;
@@ -49,10 +86,13 @@
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
 
         /* --- 玩家資訊 --- */
-        .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; pointer-events: none; }
-        .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
-        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; pointer-events: none; }
-
+     <div class="player" onclick="openProfile()" style="cursor:pointer; pointer-events:auto;">
+    <div class="avatar"></div>
+    <div>
+        <div class="name">Fudeya</div>
+        <div class="rank">RK 0</div>
+    </div>
+</div>
         /* --- 按鈕樣式 (大尺寸) --- */
         .settings {
             position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
@@ -108,6 +148,58 @@
     </div>
 
     <script>
+
+        // 1. 打開介面
+function openProfile() {
+    document.getElementById('profile-overlay').style.display = 'block';
+    switchTab('avatar'); // 預設顯示頭像頁
+}
+
+// 2. 關閉介面
+function closeProfile() {
+    document.getElementById('profile-overlay').style.display = 'none';
+}
+
+// 3. 切換分頁內容
+function switchTab(type) {
+    const container = document.getElementById('tab-content');
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => t.classList.remove('tab-active'));
+
+    if (type === 'avatar') {
+        document.getElementById('tab-avatar').classList.add('tab-active');
+        container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5;">頭像選擇區域（暫略）</p>`;
+    } 
+    else if (type === 'name') {
+        document.getElementById('tab-name').classList.add('tab-active');
+        container.innerHTML = `
+            <h2>修改玩家名稱</h2>
+            <input type="text" id="newNameInput" class="input-field" placeholder="輸入新名稱...">
+            <br>
+            <button class="interactive action-btn save-btn" data-tip="保存並同步名稱" onclick="saveName()">保存</button>
+        `;
+    } 
+    else if (type === 'code') {
+        document.getElementById('tab-code').classList.add('tab-active');
+        container.innerHTML = `
+            <h2>兌換代碼</h2>
+            <input type="text" class="input-field" placeholder="請輸入兌換碼...">
+            <br>
+            <button class="interactive action-btn confirm-btn" data-tip="確認兌換內容">確認</button>
+        `;
+    }
+}
+
+// 4. 保存名稱並改掉大廳左上角的字
+function saveName() {
+    const newName = document.getElementById('newNameInput').value;
+    if (newName.trim() !== "") {
+        // 找到大廳原本顯示名字的地方並替換
+        const lobbyName = document.querySelector('.player .name') || document.querySelector('.player div div');
+        if(lobbyName) lobbyName.innerText = newName;
+        alert("名稱已更新為: " + newName);
+    }
+}
         const tooltip = document.getElementById('tooltip');
         const overlay = document.getElementById('black-overlay');
         const elements = document.querySelectorAll('.interactive');
