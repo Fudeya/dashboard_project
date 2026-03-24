@@ -242,6 +242,35 @@
                 }
             }
         });
+
+        // 1. 防止鍵盤彈出時頁面偏移
+document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT') {
+        // 稍微延遲執行，確保在鍵盤完全彈出後強行將視窗拉回頂部
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+        }, 50);
+    }
+});
+
+// 2. 當鍵盤收起時，再次確保佈局回到原位
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT') {
+        window.scrollTo(0, 0);
+    }
+});
+
+// 3. 針對 iOS 的 Visual Viewport 進行修正 (最強效的方法)
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        // 鍵盤彈出時，Visual Viewport 的高度會縮小
+        // 我們強制讓 body 的高度等於可視高度，並鎖定在頂部
+        if (profileOverlay.style.display === 'block') {
+            window.scrollTo(0, 0);
+        }
+    });
+}
     </script>
 </body>
 </html>
