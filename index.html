@@ -26,42 +26,64 @@ body {
     100% { background-position: -40px 40px, -40px 40px, 0 0; }
 }
 
-/* 懸浮提示標籤 (Tooltip) */
+/* 固定在下方的提示標籤 (Tooltip) */
 #tooltip {
     position: fixed;
+    bottom: 50px; /* 距離底部距離 */
+    left: 50%;
+    transform: translateX(-50%); /* 水平居中 */
     pointer-events: none;
-    background: rgba(100, 100, 100, 0.6);
-    backdrop-filter: blur(4px);
-    padding: 5px 15px;
-    border-radius: 10px;
-    font-size: 14px;
+    background: rgba(80, 80, 80, 0.6); /* 半透明灰色 */
+    backdrop-filter: blur(8px);
+    padding: 8px 25px;
+    border-radius: 12px; /* 圓角長方形 */
+    font-size: 18px;
     color: white;
-    display: none; /* 預設隱藏 */
+    opacity: 0; /* 預設透明 */
     z-index: 9999;
     white-space: nowrap;
-    transition: opacity 0.1s;
+    transition: opacity 0.2s ease; /* 快速觸發 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 玩家資訊與資源 (排除懸浮檢測) */
-.player, .resources, .character {
-    pointer-events: none; 
+/* 玩家資訊與資源 */
+.player, .resources {
     position: absolute;
-    z-index: 5;
+    z-index: 10;
 }
-
 .player { top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; }
 .avatar { width: 70px; height: 70px; border-radius: 15px; background: #ddd; }
 .resources { bottom: 80px; left: 80px; }
 .gold { color: #ffd54f; }
 
-/* 角色圖片 */
+/* 角色圖片區域 */
 .character {
-    top: 30px; bottom: 30px; left: 30px; width: 50%;
-    display: flex; align-items: flex-end; justify-content: center;
+    position: absolute;
+    top: 30px;
+    bottom: 30px;
+    left: 30px;
+    width: 50%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none; 
+    z-index: 5;
 }
-.character img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-/* 六邊形設定 - 快速反應與自動縮回 */
+.character img {
+    max-width: 100%;
+    max-height: 90%;
+    object-fit: contain;
+    /* 8秒一次的上下循環 */
+    animation: floating 8s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-25px); } /* 稍微加大位移讓8秒更有感 */
+}
+
+/* 六邊形設定 */
 .settings {
     position: absolute;
     top: 25%; left: 60%;
@@ -72,19 +94,20 @@ body {
     display: flex; align-items: center; justify-content: center;
     color: black; font-weight: bold;
     cursor: pointer;
-    /* 這裡關鍵：快速 transition，離開時會自動變回 rotate(0deg) */
     transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 20;
 }
 
 .settings:hover {
     transform: translate(-50%, -50%) rotate(15deg) scale(1.1);
 }
 
-/* 右側按鈕 - 發光效果 */
+/* 右側按鈕 */
 .menu {
     position: absolute; right: 50px; top: 50%;
     transform: translateY(-50%);
     display: flex; flex-direction: column; gap: 25px;
+    z-index: 20;
 }
 
 .btn {
@@ -93,13 +116,13 @@ body {
     background: #4c8bf5;
     border: none; color: white; font-size: 20px;
     cursor: pointer;
-    transition: all 0.15s ease-out; /* 快速響應 */
+    transition: all 0.15s ease-out;
 }
 
 .btn:hover {
     transform: scale(1.05);
     background: #6aa6ff;
-    box-shadow: 0 0 25px rgba(106, 166, 255, 0.8); /* 強發光 */
+    box-shadow: 0 0 25px rgba(106, 166, 255, 0.8);
 }
 
 .bottom-menu { display: flex; gap: 20px; }
@@ -113,7 +136,7 @@ body {
 <div id="tooltip"></div>
 
 <div class="character">
-    <img src="baikui_normal.png" alt="">
+    <img src="baikui_normal.png" alt="Character">
 </div>
 
 <div class="player">
@@ -129,38 +152,34 @@ body {
     <div class="gold">金元素: 0</div>
 </div>
 
-<div class="settings" data-tip="設定">
-    設定
-</div>
+<div class="settings" data-tip="設定">設定</div>
 
 <div class="menu">
-    <button class="btn" data-tip="進入遊戲模式">遊玩</button>
-    <button class="btn" data-tip="編輯自定義內容">自製區</button>
-    
+    <button class="btn" data-tip="遊玩">遊玩</button>
+    <button class="btn" data-tip="自製區">自製區</button>
     <div class="bottom-menu">
-        <button class="btn btn-small" data-tip="查看已獲得圖鑑">圖鑑</button>
-        <button class="btn btn-small" data-tip="購買道具">店</button>
+        <button class="btn btn-small" data-tip="圖鑑">圖鑑</button>
+        <button class="btn btn-small" data-tip="店">店</button>
     </div>
 </div>
 
 <script>
     const tooltip = document.getElementById('tooltip');
     
-    // 監聽畫面上所有具有 data-tip 屬性的元素
     document.querySelectorAll('[data-tip]').forEach(el => {
         el.addEventListener('mouseenter', (e) => {
-            tooltip.innerText = e.target.getAttribute('data-tip');
-            tooltip.style.display = 'block';
-        });
-
-        el.addEventListener('mousemove', (e) => {
-            // 讓提示框跟隨滑鼠，並保持一點距離
-            tooltip.style.left = e.clientX + 15 + 'px';
-            tooltip.style.top = e.clientY + 25 + 'px';
+            tooltip.innerText = e.currentTarget.getAttribute('data-tip');
+            tooltip.style.opacity = '1';
         });
 
         el.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
+            tooltip.style.opacity = '0';
+        });
+        
+        // 針對移動端/平板的觸控優化
+        el.addEventListener('touchstart', (e) => {
+            tooltip.innerText = e.currentTarget.getAttribute('data-tip');
+            tooltip.style.opacity = '1';
         });
     });
 </script>
