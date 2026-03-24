@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Lobby - Professional Touch</title>
-
+    <title>Game Lobby - Professional Version</title>
     <style>
+        /* --- 基礎鎖定與背景 --- */
         body {
             margin: 0; height: 100vh; width: 100vw; overflow: hidden;
             font-family: sans-serif; color: white;
@@ -14,185 +14,170 @@
                         linear-gradient(135deg,#020617,#0a1b3a);
             background-size: 40px 40px, 40px 40px, cover;
             animation: gridMove 20s linear infinite;
-            user-select: none; -webkit-user-select: none;
-            touch-action: none; /* 完全接管觸控 */
+            user-select: none; -webkit-user-select: none; touch-action: none;
+            cursor: default;
+            transition: transform 0.6s cubic-bezier(0.6, 0, 0.4, 1), filter 0.6s; /* 轉場用 */
         }
 
-        @keyframes gridMove { 
-            0% { background-position: 0 0; } 100% { background-position: -40px 40px; } 
+        @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: -40px 40px; } }
+
+        /* 轉場黑幕遮罩 */
+        #black-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: black; opacity: 0; pointer-events: none; z-index: 1000;
+            transition: opacity 0.6s;
         }
 
-        /* 提示框 */
+        /* 轉場時的縮放狀態 */
+        .zoom-effect { transform: scale(3); filter: brightness(0); }
+
+        /* --- 提示框 --- */
         #tooltip {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: rgba(60, 60, 60, 0.8); backdrop-filter: blur(8px);
-            padding: 12px 40px; border-radius: 15px; font-size: 20px;
-            opacity: 0; transition: opacity 0.1s; z-index: 100;
+            background: rgba(60, 60, 60, 0.85); backdrop-filter: blur(10px);
+            padding: 12px 45px; border-radius: 15px; font-size: 20px;
+            opacity: 0; transition: opacity 0.1s; z-index: 100; pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* 角色 (8秒浮動) */
+        /* --- 角色區 (8秒循環) --- */
         .character {
             position: absolute; bottom: 30px; left: 30px; width: 50%; height: 90%;
             display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
         }
-        .character img { max-height: 100%; animation: floating 8s ease-in-out infinite; }
+        .character img { max-height: 100%; object-fit: contain; animation: floating 8s ease-in-out infinite; }
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
 
-        /* 介面文字 */
-        .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 80px; height: 80px; border-radius: 20px; background: #ddd; }
-        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 20px; }
+        /* --- 玩家資訊 --- */
+        .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; pointer-events: none; }
+        .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
+        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; pointer-events: none; }
 
-        /* 按鈕樣式恢復與放大 */
+        /* --- 按鈕樣式 (大尺寸) --- */
         .settings {
             position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
             width: 150px; height: 150px; background: white; color: black; font-weight: bold;
             clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
-            transition: all 0.1s ease-out;
+            display: flex; align-items: center; justify-content: center; font-size: 26px;
+            transition: all 0.15s ease-out; z-index: 10;
         }
 
-        .menu { position: absolute; right: 60px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
+        .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
         .btn {
-            padding: 25px 0; width: 320px; border-radius: 18px; /* 寬度加大 */
-            background: #4c8bf5; border: none; color: white; font-size: 24px;
-            transition: all 0.1s ease-out; text-align: center;
+            padding: 28px 0; width: 330px; border-radius: 20px;
+            background: #4c8bf5; border: none; color: white; font-size: 26px;
+            transition: all 0.15s ease-out; text-align: center;
         }
-        .bottom-menu { display: flex; gap: 20px; }
-        .btn-small { width: 150px; }
+        .btn-small { width: 155px; }
 
-        /* 啟動狀態 (由 JS 控制) */
-        .active-btn { 
-            background: #6aa6ff !important; 
-            box-shadow: 0 0 30px rgba(106, 166, 255, 0.9);
-            transform: scale(1.1); 
-        }
-        .active-settings { 
-            background: #eeeeee !important; 
-            transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; 
-        }
-
-        /* 最終執行回彈動畫 */
+        /* --- 啟動狀態 --- */
+        .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.1); }
+        .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; }
+        
+        /* 點擊瞬間的回彈動畫 */
         .pop-anim { animation: pop 0.3s ease-out; }
-        @keyframes pop { 0% { transform: scale(1.1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes pop { 0% { transform: scale(1.1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
+    <div id="black-overlay"></div>
     <div id="tooltip"></div>
 
-    <div class="character"><img src="baikui_normal.png"></div>
+    <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
 
     <div class="player">
         <div class="avatar"></div>
-        <div><div style="font-size: 26px;">Fudeya</div><div style="opacity: 0.6;">RK 0</div></div>
+        <div><div style="font-size: 30px;">Fudeya</div><div style="opacity: 0.6; font-size: 18px;">RK 0</div></div>
     </div>
 
     <div class="resources">
-        <div>銅: 0</div>
-        <div style="color: #ffd54f;">金線材: 0</div>
+        <div>銅幣: 0</div>
+        <div style="color: #ffd54f;">金元素: 0</div>
     </div>
 
-    <div class="interactive settings" data-tip="設定">設定</div>
+    <div class="interactive settings" data-tip="系統設定" data-target="settings.html">設定</div>
 
     <div class="menu">
-        <button class="interactive btn" data-tip="進入遊戲">遊玩</button>
-        <button class="interactive btn" data-tip="查看分析資料">分析筆記本</button>
-        <div class="bottom-menu">
-            <button class="interactive btn btn-small" data-tip="收藏圖鑑">圖鑑</button>
-            <button class="interactive btn btn-small" data-tip="道具商店">店</button>
+        <button class="interactive btn" data-tip="進入遊戲模式" data-target="play.html">遊玩</button>
+        <button class="interactive btn" data-tip="查看分析資料" data-target="notebook.html">分析筆記本</button>
+        <div style="display: flex; gap: 20px;">
+            <button class="interactive btn btn-small" data-tip="查看已獲圖鑑" data-target="collection.html">圖鑑</button>
+            <button class="interactive btn btn-small" data-tip="購買道具" data-target="shop.html">店</button>
         </div>
     </div>
 
     <script>
         const tooltip = document.getElementById('tooltip');
+        const overlay = document.getElementById('black-overlay');
         const elements = document.querySelectorAll('.interactive');
-        let activeFingerId = null; // 鎖定第一隻手指
+        let activeFingerId = null;
         let currentActiveEl = null;
 
+        // 碰撞偵測
         function checkCollision(x, y) {
             let hit = null;
             elements.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                    hit = el;
-                }
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) hit = el;
             });
             return hit;
         }
 
+        // 實時處理手指位置
         function handleMove(x, y) {
             const hitEl = checkCollision(x, y);
-            
             if (hitEl !== currentActiveEl) {
-                // 清除舊的狀態
-                if (currentActiveEl) {
-                    currentActiveEl.classList.remove('active-btn', 'active-settings');
-                    tooltip.style.opacity = '0';
-                }
-                // 設定新的狀態
+                if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
                 if (hitEl) {
-                    const isSettings = hitEl.classList.contains('settings');
-                    hitEl.classList.add(isSettings ? 'active-settings' : 'active-btn');
+                    const isHex = hitEl.classList.contains('settings');
+                    hitEl.classList.add(isHex ? 'active-settings' : 'active-btn');
                     tooltip.innerText = hitEl.getAttribute('data-tip');
                     tooltip.style.opacity = '1';
+                } else {
+                    tooltip.style.opacity = '0';
                 }
                 currentActiveEl = hitEl;
             }
         }
 
-        // 觸控開始
+        // 跳轉轉場邏輯
+        function triggerTransition(url) {
+            overlay.style.opacity = '1';
+            document.body.classList.add('zoom-effect');
+            setTimeout(() => { window.location.href = url; }, 600);
+        }
+
+        // 觸控事件
         window.addEventListener('touchstart', (e) => {
             if (activeFingerId === null) {
                 activeFingerId = e.changedTouches[0].identifier;
-                const touch = e.changedTouches[0];
-                handleMove(touch.clientX, touch.clientY);
+                handleMove(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
             }
         }, { passive: false });
 
-        // 觸控移動 (隨時偵測位置)
         window.addEventListener('touchmove', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === activeFingerId) {
-                    const touch = e.changedTouches[i];
-                    handleMove(touch.clientX, touch.clientY);
+            for (let t of e.changedTouches) {
+                if (t.identifier === activeFingerId) {
+                    handleMove(t.clientX, t.clientY);
                 }
             }
             e.preventDefault();
         }, { passive: false });
 
-        // 觸控結束
         window.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === activeFingerId) {
+            for (let t of e.changedTouches) {
+                if (t.identifier === activeFingerId) {
                     if (currentActiveEl) {
-                        // 只有在按鈕範圍內放開才執行
+                        const target = currentActiveEl.getAttribute('data-target');
                         currentActiveEl.classList.add('pop-anim');
-                        console.log("執行功能: " + currentActiveEl.innerText);
-                        
-                        const elToClean = currentActiveEl;
-                        setTimeout(() => elToClean.classList.remove('pop-anim'), 300);
+                        triggerTransition(target);
                     }
-                    
-                    // 重置狀態
-                    if (currentActiveEl) {
-                        currentActiveEl.classList.remove('active-btn', 'active-settings');
-                    }
-                    currentActiveEl = null;
                     activeFingerId = null;
-                    tooltip.style.opacity = '0';
+                    // 不立刻移除 active-btn 讓視覺有延續感
                 }
             }
         });
-
-        // 桌面端滑鼠支持 (可選)
-        window.addEventListener('mousedown', (e) => { handleMove(e.clientX, e.clientY); });
-        window.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleMove(e.clientX, e.clientY); });
-        window.addEventListener('mouseup', () => { 
-            if(currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
-            currentActiveEl = null; tooltip.style.opacity = '0'; 
-        });
-
     </script>
 </body>
 </html>
