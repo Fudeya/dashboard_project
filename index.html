@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Game Lobby - Animation & Fixed</title>
+    <title>Game Lobby - Fixed</title>
     <style>
-        /* --- 1. 物理鎖定：禁止所有原生捲動 --- */
+        /* --- 1. 物理鎖定與禁止選取 --- */
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; position: fixed; background: #020617;
-            font-family: sans-serif; touch-action: none; /* 關鍵：由 JS 接管觸摸 */
+            font-family: sans-serif; touch-action: none;
+            /* 修復圖 1：禁止長按選取 */
+            -webkit-user-select: none; 
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
-        /* --- 2. 超大背景：解決黑邊問題 --- */
         .bg-layer {
             position: fixed; 
             top: -50vh; left: -50vw; width: 200vw; height: 200vh;
@@ -24,7 +27,6 @@
             pointer-events: none;
         }
 
-        /* --- 3. UI 元素與動畫 --- */
         #tooltip {
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
             background: rgba(60, 60, 60, 0.85); backdrop-filter: blur(10px);
@@ -45,7 +47,7 @@
             width: 150px; height: 150px; background: white; color: black;
             clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
             display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold;
-            transition: all 0.15s ease-out; z-index: 10;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10;
         }
 
         .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
@@ -65,9 +67,30 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 500; display: none;
         }
-        .tab-btn { padding: 20px; font-size: 22px; color: white; background: rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; margin-bottom: 10px; }
-        .tab-active { background: #4c8bf5 !important; }
-        .input-field { width: 400px; padding: 15px; font-size: 20px; border-radius: 10px; border: 1px solid #4c8bf5; background: rgba(0,0,0,0.5); color: white; }
+        
+        .tab-btn { 
+            padding: 20px; font-size: 22px; color: white; border-radius: 10px; cursor: pointer; 
+            margin-bottom: 10px; transition: all 0.3s ease; border: 1px solid transparent;
+        }
+
+        /* 修復圖 2：移除藍色背景，改為放大與發光 */
+        .tab-active { 
+            background: transparent !important; 
+            transform: scale(1.15);
+            border: 1px solid rgba(106, 166, 255, 0.5);
+            box-shadow: 0 0 20px rgba(106, 166, 255, 0.4);
+            color: #6aa6ff !important;
+        }
+
+        .input-field { 
+            width: 400px; padding: 15px; font-size: 20px; border-radius: 10px; 
+            border: 1px solid #4c8bf5; background: rgba(255,255,255,0.1); color: white;
+            -webkit-user-select: text; /* 允許輸入框選取文字 */
+        }
+        
+        /* 修復圖 4：按鈕與輸入框的間距補強 */
+        .save-btn-ui { margin-top: 35px !important; }
+
     </style>
 </head>
 <body>
@@ -79,7 +102,7 @@
         <div class="interactive" data-tip="關閉" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:40px; cursor:pointer;">✕</div>
         <div style="display:flex; height:100%; padding:100px 150px;">
             <div style="width:200px; display:flex; flex-direction:column; gap:20px; border-right:1px solid rgba(255,255,255,0.2);">
-                <div class="interactive tab-btn" id="tab-avatar" data-tip="更換頭像" onclick="switchTab('avatar')">頭像</div>
+                <div class="interactive tab-btn" id="tab-avatar" data-tip="頭像設定" onclick="switchTab('avatar')">頭像</div>
                 <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
                 <div class="interactive tab-btn" id="tab-code" data-tip="兌換序號" onclick="switchTab('code')">兌換碼</div>
             </div>
@@ -125,24 +148,32 @@
         function switchTab(type) {
             const container = document.getElementById('tab-content');
             document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('tab-active'));
+            
             if (type === 'avatar') {
                 document.getElementById('tab-avatar').classList.add('tab-active');
-                container.innerHTML = `<h2>頭像設定</h2>`;
-            } else if (type === 'name') {
+                container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5">目前尚無可更換頭像</p>`;
+            } 
+            else if (type === 'name') {
                 document.getElementById('tab-name').classList.add('tab-active');
-                container.innerHTML = `<h2>修改玩家名稱</h2><input type="text" id="newNameInput" class="input-field" placeholder="點擊輸入..."><br><button class="interactive btn btn-small" style="font-size:18px; padding:10px;" onclick="saveName()">保存</button>`;
-            } else if (type === 'code') {
+                // 修復圖 4：增加 margin-top 給按鈕
+                container.innerHTML = `<h2>修改玩家名稱</h2>
+                    <input type="text" id="newNameInput" class="input-field" placeholder="點擊輸入...">
+                    <br><button class="interactive btn btn-small save-btn-ui" style="font-size:18px; padding:10px;" onclick="saveName()">保存修改</button>`;
+            } 
+            else if (type === 'code') {
                 document.getElementById('tab-code').classList.add('tab-active');
-                container.innerHTML = `<h2>兌換代碼</h2><input type="text" class="input-field" placeholder="輸入代碼...">`;
+                // 修復圖 3：補回確認按鈕
+                container.innerHTML = `<h2>兌換代碼</h2>
+                    <input type="text" id="codeInput" class="input-field" placeholder="輸入序號...">
+                    <br><button class="interactive btn btn-small save-btn-ui" style="font-size:18px; padding:10px; background:#ffd54f; color:black;" onclick="alert('序號無效')">確認兌換</button>`;
             }
         }
 
         function saveName() {
             const val = document.getElementById('newNameInput').value;
-            if(val) { document.querySelector('.player .name').innerText = val; alert('OK'); }
+            if(val) { document.querySelector('.player .name').innerText = val; alert('名稱修改成功！'); }
         }
 
-        // --- 核心邏輯：偵測與碰撞 ---
         function checkCollision(x, y) {
             let hit = null;
             document.querySelectorAll('.interactive').forEach(el => {
@@ -155,17 +186,22 @@
         function handleMove(x, y) {
             const hitEl = checkCollision(x, y);
             if (hitEl !== currentActiveEl) {
-                if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
+                // 當手指判定位置離開舊按鈕時，移除動畫類名
+                if (currentActiveEl) {
+                    currentActiveEl.classList.remove('active-btn', 'active-settings');
+                }
+                
                 if (hitEl) {
                     hitEl.classList.add(hitEl.classList.contains('settings') ? 'active-settings' : 'active-btn');
                     tooltip.innerText = hitEl.getAttribute('data-tip') || "";
                     tooltip.style.opacity = '1';
-                } else { tooltip.style.opacity = '0'; }
+                } else { 
+                    tooltip.style.opacity = '0'; 
+                }
                 currentActiveEl = hitEl;
             }
         }
 
-        // --- 觸摸監聽：接管所有行為 ---
         window.addEventListener('touchstart', (e) => {
             if (activeFingerId === null) {
                 activeFingerId = e.changedTouches[0].identifier;
@@ -177,7 +213,6 @@
             for (let t of e.changedTouches) {
                 if (t.identifier === activeFingerId) handleMove(t.clientX, t.clientY);
             }
-            // 彈窗內如果有輸入框，允許預設行為（方便選取文字），否則禁止滑動
             if (!e.target.closest('.input-field')) e.preventDefault();
         }, { passive: false });
 
@@ -188,18 +223,19 @@
                         const target = currentActiveEl.getAttribute('data-target');
                         if (target) window.location.href = target;
                         else currentActiveEl.click();
+                        
+                        // 點擊後立即清除動畫狀態，避免殘留
+                        currentActiveEl.classList.remove('active-btn', 'active-settings');
                     }
                     activeFingerId = null;
+                    currentActiveEl = null;
+                    tooltip.style.opacity = '0';
                 }
             }
         });
 
-        // --- iPad 鍵盤偏移修正 ---
         if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                // 鍵盤彈出時，強行將 body 拉回頂部，並維持背景覆蓋
-                window.scrollTo(0, 0);
-            });
+            window.visualViewport.addEventListener('resize', () => { window.scrollTo(0, 0); });
         }
         document.addEventListener('focusout', () => { window.scrollTo(0, 0); });
     </script>
