@@ -109,14 +109,23 @@
 
     function openProfile() {
         profileOverlay.style.display = 'block';
-        uiBlocker.style.display = 'block'; // 啟動物理遮罩
+        uiBlocker.style.display = 'block';
         switchTab('avatar');
     }
 
+    // --- 修改這裡：關閉時強制歸位 ---
     function closeProfile() {
         profileOverlay.style.display = 'none';
-        uiBlocker.style.display = 'none'; // 移除遮罩
-        window.scrollTo(0,0);
+        uiBlocker.style.display = 'none';
+        
+        // 1. 立即歸位
+        window.scrollTo(0, 0); 
+        // 2. 針對 iPad 的延遲補強 (防止鍵盤縮回動畫造成的偏移)
+        setTimeout(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+        }, 100);
     }
 
     function switchTab(type) {
@@ -125,7 +134,7 @@
         
         if (type === 'avatar') {
             document.getElementById('tab-avatar').classList.add('tab-active');
-            container.innerHTML = `<h1>頭像設定</h1><p>尚未開放選擇功能</p>`;
+            container.innerHTML = `<h1>頭像設定</h1><p>暫無內容</p>`;
         } else if (type === 'name') {
             document.getElementById('tab-name').classList.add('tab-active');
             container.innerHTML = `<h1>修改玩家名稱</h1>
@@ -135,7 +144,7 @@
             document.getElementById('tab-code').classList.add('tab-active');
             container.innerHTML = `<h1>兌換獎勵碼</h1>
                 <input type="text" id="codeInput" class="input-field" placeholder="輸入序號...">
-                <br><button class="save-btn" style="background:#ffd54f; color:black;" onclick="alert('無效的代碼')">兌換</button>`;
+                <br><button class="save-btn" style="background:#ffd54f; color:black;" onclick="alert('無效代碼')">兌換</button>`;
         }
     }
 
@@ -144,25 +153,15 @@
         if(val && val.trim() !== "") {
             document.querySelector('.player .name').innerText = val;
             alert('修改成功！');
+            // 存檔後也強制歸位，避免畫面卡住
+            window.scrollTo(0, 0);
         }
     }
 
-    // iPadOS 26 Safari 暴力歸位腳本
-    const resetScroll = () => {
-        setTimeout(() => {
-            window.scrollTo({top: 0, left: 0, behavior: 'instant'});
-        }, 50);
-    };
-
-    document.addEventListener('focusout', resetScroll);
-    window.addEventListener('blur', resetScroll);
-    
-    // 禁止背景捲動
-    document.addEventListener('touchmove', function(e) {
-        if (!e.target.closest('#profile-overlay')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+    // 監聽鍵盤收起的動作
+    document.addEventListener('focusout', () => {
+        setTimeout(() => { window.scrollTo(0, 0); }, 50);
+    });
 </script>
 
 </body>
