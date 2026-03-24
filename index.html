@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Lobby - Fixed Version</title>
+    <title>Game Lobby - Professional Version</title>
     <style>
         /* --- 基礎鎖定與背景 --- */
         body {
@@ -119,8 +119,8 @@
     </div>
 
     <div class="resources">
-        <div>銅幣: 0</div>
-        <div style="color: #ffd54f;">金元素: 0</div>
+        <div>銅: 0</div>
+        <div style="color: #ffd54f;">金線材: 0</div>
     </div>
 
     <div class="interactive settings" data-tip="系統設定">設定</div>
@@ -137,12 +137,12 @@
     <script>
         const tooltip = document.getElementById('tooltip');
         const overlay = document.getElementById('black-overlay');
-        const elements = document.querySelectorAll('.interactive');
+        const profileOverlay = document.getElementById('profile-overlay');
         let activeFingerId = null;
         let currentActiveEl = null;
 
-        function openProfile() { document.getElementById('profile-overlay').style.display = 'block'; switchTab('avatar'); }
-        function closeProfile() { document.getElementById('profile-overlay').style.display = 'none'; }
+        function openProfile() { profileOverlay.style.display = 'block'; switchTab('avatar'); }
+        function closeProfile() { profileOverlay.style.display = 'none'; tooltip.style.opacity = '0'; }
 
         function switchTab(type) {
             const container = document.getElementById('tab-content');
@@ -170,7 +170,9 @@
 
         function checkCollision(x, y) {
             let hit = null;
-            elements.forEach(el => {
+            // 動態抓取所有互動元素，確保包含彈窗內的按鈕
+            const allInteractives = document.querySelectorAll('.interactive');
+            allInteractives.forEach(el => {
                 const rect = el.getBoundingClientRect();
                 if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) hit = el;
             });
@@ -178,7 +180,19 @@
         }
 
         function handleMove(x, y) {
+            const isProfileOpen = profileOverlay.style.display === 'block';
             const hitEl = checkCollision(x, y);
+
+            // 防穿透邏輯：如果彈窗開啟且點到的東西不在彈窗內，直接無視
+            if (isProfileOpen && hitEl && !profileOverlay.contains(hitEl)) {
+                if (currentActiveEl) {
+                    currentActiveEl.classList.remove('active-btn', 'active-settings');
+                    currentActiveEl = null;
+                    tooltip.style.opacity = '0';
+                }
+                return;
+            }
+
             if (hitEl !== currentActiveEl) {
                 if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
                 if (hitEl) {
@@ -219,8 +233,8 @@
                         if (target) {
                             currentActiveEl.classList.add('pop-anim');
                             triggerTransition(target);
-                        } else if (currentActiveEl.onclick) {
-                            // 如果是沒有 target 的按鈕（如關閉、保存、設定），執行它原本的 onclick
+                        } else {
+                            // 執行點擊事件 (用於彈窗按鈕、關閉按鈕等)
                             currentActiveEl.click();
                         }
                     }
