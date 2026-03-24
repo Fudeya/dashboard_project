@@ -2,129 +2,103 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Lobby - Professional Version</title>
-   <style>
-    /* --- 基礎鎖定與背景 --- */
-    body {
-        margin: 0; 
-        height: 100vh; 
-        width: 100vw; 
-        overflow: hidden;
-        font-family: sans-serif; 
-        color: white;
-        background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                    linear-gradient(135deg,#020617,#0a1b3a);
-        background-size: 40px 40px, 40px 40px, cover;
-        animation: gridMove 20s linear infinite;
-        user-select: none; 
-        -webkit-user-select: none; 
-        touch-action: none;
-        cursor: default;
-        /* 重要：防止 iOS 鍵盤彈出時滾動 */
-        position: fixed; 
-        top: 0;
-        left: 0;
-    }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Game Lobby - Fixed</title>
+    <style>
+        /* --- 1. 核心定位修復 --- */
+        html, body {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; /* 禁止任何捲動 */
+            position: fixed; /* 強制鎖定螢幕不准動 */
+            background: #020617; /* 預備底色 */
+        }
 
-    @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: -40px 40px; } }
+        /* --- 2. 專用的背景層 (解決背景消失問題) --- */
+        .bg-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                        linear-gradient(135deg,#020617,#0a1b3a);
+            background-size: 40px 40px, 40px 40px, cover;
+            animation: gridMove 20s linear infinite;
+            z-index: -1;
+        }
 
-    /* 確保彈窗不會被鍵盤推歪 */
-    #profile-overlay {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.85);
-        backdrop-filter: blur(10px);
-        z-index: 500;
-        overflow: hidden;
-    }
+        @keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: -40px 40px; } }
 
-    #black-overlay {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: black; opacity: 0; pointer-events: none; z-index: 1000;
-        transition: opacity 0.6s;
-    }
+        /* --- 3. UI 元素 --- */
+        #tooltip {
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(60, 60, 60, 0.85); backdrop-filter: blur(10px);
+            padding: 12px 45px; border-radius: 15px; font-size: 20px; color: white;
+            opacity: 0; transition: opacity 0.1s; z-index: 100; pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
 
-    .zoom-effect { transform: scale(3); filter: brightness(0); }
+        .character {
+            position: absolute; bottom: 30px; left: 30px; width: 50%; height: 90%;
+            display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
+        }
+        .character img { max-height: 100%; object-fit: contain; animation: floating 8s ease-in-out infinite; }
+        @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
 
-    #tooltip {
-        position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-        background: rgba(60, 60, 60, 0.85); backdrop-filter: blur(10px);
-        padding: 12px 45px; border-radius: 15px; font-size: 20px;
-        opacity: 0; transition: opacity 0.1s; z-index: 100; pointer-events: none;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
+        .player { 
+            position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; 
+            cursor: pointer; pointer-events: auto; z-index: 20; color: white;
+        }
+        .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
+        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; pointer-events: none; color: white; }
 
-    .character {
-        position: absolute; bottom: 30px; left: 30px; width: 50%; height: 90%;
-        display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
-    }
-    .character img { max-height: 100%; object-fit: contain; animation: floating 8s ease-in-out infinite; }
-    @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
+        .settings {
+            position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
+            width: 150px; height: 150px; background: white; color: black; font-weight: bold;
+            clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+            display: flex; align-items: center; justify-content: center; font-size: 26px;
+            transition: all 0.15s ease-out; z-index: 10;
+        }
 
-    .player { 
-        position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; 
-        cursor: pointer; pointer-events: auto; z-index: 20;
-    }
-    .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
-    .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; pointer-events: none; }
+        .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
+        .btn {
+            padding: 28px 0; width: 330px; border-radius: 20px;
+            background: #4c8bf5; border: none; color: white; font-size: 26px;
+            transition: all 0.15s ease-out; text-align: center;
+        }
+        .btn-small { width: 155px; }
 
-    .settings {
-        position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
-        width: 150px; height: 150px; background: white; color: black; font-weight: bold;
-        clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
-        display: flex; align-items: center; justify-content: center; font-size: 26px;
-        transition: all 0.15s ease-out; z-index: 10;
-    }
+        .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.1); }
+        .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; box-shadow: 0 0 30px rgba(255,255,255,0.4); }
 
-    .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
-    .btn {
-        padding: 28px 0; width: 330px; border-radius: 20px;
-        background: #4c8bf5; border: none; color: white; font-size: 26px;
-        transition: all 0.15s ease-out; text-align: center;
-    }
-    .btn-small { width: 155px; }
-
-    .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.1); }
-    .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; box-shadow: 0 0 30px rgba(255,255,255,0.4); }
-    
-    .pop-anim { animation: pop 0.3s ease-out; }
-    @keyframes pop { 0% { transform: scale(1.1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
-
-    /* 彈窗內部分頁按鈕 */
-    .tab-btn {
-        padding: 20px; font-size: 22px; text-align: center; color: white;
-        background: rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; transition: 0.2s;
-    }
-    .tab-active { background: #4c8bf5 !important; box-shadow: 0 0 15px #4c8bf5; }
-    .input-field {
-        width: 400px; padding: 15px; font-size: 20px; border-radius: 10px;
-        border: 1px solid #4c8bf5; background: rgba(0,0,0,0.5); color: white; margin-bottom: 20px;
-        -webkit-appearance: none; /* 移除 iOS 預設內陰影 */
-    }
-    .action-btn { padding: 12px 30px; border-radius: 8px; border: none; font-size: 18px; cursor: pointer; transition: 0.2s; }
-    .save-btn { background: #4c8bf5; color: white; }
-    .confirm-btn { background: #ffd54f; color: black; }
-</style>
+        /* --- 4. 彈窗與輸入框 --- */
+        #profile-overlay {
+            position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 500; display: none;
+        }
+        .tab-btn {
+            padding: 20px; font-size: 22px; text-align: center; color: white;
+            background: rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .tab-active { background: #4c8bf5 !important; box-shadow: 0 0 15px #4c8bf5; }
+        .input-field {
+            width: 400px; padding: 15px; font-size: 20px; border-radius: 10px;
+            border: 1px solid #4c8bf5; background: rgba(0,0,0,0.5); color: white; margin-bottom: 20px;
+        }
+        .action-btn { padding: 12px 30px; border-radius: 8px; border: none; font-size: 18px; cursor: pointer; color: white; }
+    </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div id="black-overlay"></div>
-    <div id="tooltip"></div>
+    <div class="bg-layer"></div> <div id="tooltip"></div>
 
-    <div id="profile-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:500;">
-        <div class="interactive close-btn" data-tip="關閉介面" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; border:1px solid white; cursor:pointer; z-index:510;">✕</div>
+    <div id="profile-overlay">
+        <div class="interactive close-btn" data-tip="關閉介面" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; border:1px solid white; cursor:pointer; color:white;">✕</div>
         <div style="display:flex; height:100%; padding:100px 150px;">
             <div style="width:200px; display:flex; flex-direction:column; gap:20px; border-right:1px solid rgba(255,255,255,0.2);">
                 <div class="interactive tab-btn" id="tab-avatar" data-tip="修改頭像" onclick="switchTab('avatar')">頭像</div>
                 <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
                 <div class="interactive tab-btn" id="tab-code" data-tip="輸入兌換碼" onclick="switchTab('code')">兌換碼</div>
             </div>
-            <div id="tab-content" style="flex:1; padding-left:100px; display:flex; flex-direction:column; justify-content:center;"></div>
+            <div id="tab-content" style="flex:1; padding-left:100px; display:flex; flex-direction:column; justify-content:center; color:white;"></div>
         </div>
     </div>
 
@@ -156,7 +130,6 @@
 
     <script>
         const tooltip = document.getElementById('tooltip');
-        const overlay = document.getElementById('black-overlay');
         const profileOverlay = document.getElementById('profile-overlay');
         let activeFingerId = null;
         let currentActiveEl = null;
@@ -173,10 +146,10 @@
                 container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5;">頭像選擇區域（暫略）</p>`;
             } else if (type === 'name') {
                 document.getElementById('tab-name').classList.add('tab-active');
-                container.innerHTML = `<h2>修改玩家名稱</h2><input type="text" id="newNameInput" class="input-field" placeholder="輸入新名稱..."><br><button class="interactive action-btn save-btn" data-tip="保存並同步名稱" onclick="saveName()">保存</button>`;
+                container.innerHTML = `<h2>修改玩家名稱</h2><input type="text" id="newNameInput" class="input-field" placeholder="輸入新名稱..."><br><button class="interactive action-btn" style="background:#4c8bf5;" data-tip="保存名稱" onclick="saveName()">保存</button>`;
             } else if (type === 'code') {
                 document.getElementById('tab-code').classList.add('tab-active');
-                container.innerHTML = `<h2>兌換代碼</h2><input type="text" class="input-field" placeholder="請輸入兌換碼..."><br><button class="interactive action-btn confirm-btn" data-tip="確認兌換內容" onclick="alert('尚未開放')">確認</button>`;
+                container.innerHTML = `<h2>兌換代碼</h2><input type="text" class="input-field" placeholder="請輸入兌換碼..."><br><button class="interactive action-btn" style="background:#ffd54f; color:black;" data-tip="確認兌換" onclick="alert('尚未開放')">確認</button>`;
             }
         }
 
@@ -190,9 +163,7 @@
 
         function checkCollision(x, y) {
             let hit = null;
-            // 動態抓取所有互動元素，確保包含彈窗內的按鈕
-            const allInteractives = document.querySelectorAll('.interactive');
-            allInteractives.forEach(el => {
+            document.querySelectorAll('.interactive').forEach(el => {
                 const rect = el.getBoundingClientRect();
                 if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) hit = el;
             });
@@ -203,7 +174,6 @@
             const isProfileOpen = profileOverlay.style.display === 'block';
             const hitEl = checkCollision(x, y);
 
-            // 防穿透邏輯：如果彈窗開啟且點到的東西不在彈窗內，直接無視
             if (isProfileOpen && hitEl && !profileOverlay.contains(hitEl)) {
                 if (currentActiveEl) {
                     currentActiveEl.classList.remove('active-btn', 'active-settings');
@@ -225,11 +195,9 @@
             }
         }
 
-        function triggerTransition(url) {
-            overlay.style.opacity = '1';
-            document.body.classList.add('zoom-effect');
-            setTimeout(() => { window.location.href = url; }, 600);
-        }
+        // 防止 iOS 鍵盤彈出偏移
+        document.addEventListener('focusin', () => { window.scrollTo(0, 0); });
+        document.addEventListener('focusout', () => { window.scrollTo(0, 0); });
 
         window.addEventListener('touchstart', (e) => {
             if (activeFingerId === null) {
@@ -250,47 +218,13 @@
                 if (t.identifier === activeFingerId) {
                     if (currentActiveEl) {
                         const target = currentActiveEl.getAttribute('data-target');
-                        if (target) {
-                            currentActiveEl.classList.add('pop-anim');
-                            triggerTransition(target);
-                        } else {
-                            // 執行點擊事件 (用於彈窗按鈕、關閉按鈕等)
-                            currentActiveEl.click();
-                        }
+                        if (target) window.location.href = target;
+                        else currentActiveEl.click();
                     }
                     activeFingerId = null;
                 }
             }
         });
-
-        // 1. 防止鍵盤彈出時頁面偏移
-document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'INPUT') {
-        // 稍微延遲執行，確保在鍵盤完全彈出後強行將視窗拉回頂部
-        setTimeout(() => {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-        }, 50);
-    }
-});
-
-// 2. 當鍵盤收起時，再次確保佈局回到原位
-document.addEventListener('focusout', (e) => {
-    if (e.target.tagName === 'INPUT') {
-        window.scrollTo(0, 0);
-    }
-});
-
-// 3. 針對 iOS 的 Visual Viewport 進行修正 (最強效的方法)
-if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-        // 鍵盤彈出時，Visual Viewport 的高度會縮小
-        // 我們強制讓 body 的高度等於可視高度，並鎖定在頂部
-        if (profileOverlay.style.display === 'block') {
-            window.scrollTo(0, 0);
-        }
-    });
-}
     </script>
 </body>
 </html>
