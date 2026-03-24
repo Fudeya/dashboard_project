@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Game Lobby - Ultra Smooth</title>
+    <title>Game Lobby - No Alert Edition</title>
     <style>
         /* --- 1. 基礎鎖定與禁用預設特效 --- */
         html, body {
@@ -12,36 +12,35 @@
             font-family: sans-serif; touch-action: none;
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
-            /* 核心：移除所有移動端的點擊藍色高亮與霧化 */
+            /* 徹底移除所有 iOS 點擊藍色高亮 */
             -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
-            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
-        /* --- 漂浮通知 (替代 alert) --- */
+        /* --- 2. 自定義 Toast 提示 (取代 alert) --- */
         #toast {
-            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85); color: #fff; padding: 12px 30px;
-            border-radius: 20px; z-index: 2000; opacity: 0; transition: opacity 0.3s, top 0.3s;
-            pointer-events: none; border: 1px solid rgba(255,255,255,0.2); font-size: 18px;
+            position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95); color: #000; 
+            padding: 10px 30px; border-radius: 50px; font-weight: bold;
+            z-index: 3000; opacity: 0; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); font-size: 18px;
         }
+        #toast.show { top: 40px; opacity: 1; }
 
-        /* --- 背景與 UI --- */
+        /* --- 3. UI 元件 --- */
         .bg-layer {
             position: fixed; top: -50vh; left: -50vw; width: 200vw; height: 200vh;
             background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
                         linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
                         linear-gradient(135deg,#020617,#0a1b3a);
-            background-size: 40px 40px, 40px 40px, cover;
-            z-index: -1; pointer-events: none;
+            background-size: 40px 40px, 40px 40px, cover; z-index: -1; pointer-events: none;
         }
 
-        /* 優化：將提示框位置上調，避免被遮擋 */
         #tooltip {
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: rgba(40, 40, 40, 0.9); backdrop-filter: blur(10px);
-            padding: 10px 40px; border-radius: 12px; font-size: 18px; color: white;
+            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(50, 50, 50, 0.9); backdrop-filter: blur(10px);
+            padding: 10px 35px; border-radius: 12px; font-size: 18px; color: white;
             opacity: 0; transition: opacity 0.1s; z-index: 1000; pointer-events: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .character { position: absolute; bottom: 30px; left: 30px; width: 50%; height: 90%; pointer-events: none; }
@@ -50,58 +49,30 @@
 
         .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; color: white; z-index: 20; }
         .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
-        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; color: white; }
-
-        .settings {
-            position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
-            width: 150px; height: 150px; background: white; color: black;
-            clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
-            display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10;
-        }
 
         .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
         .btn {
             padding: 28px 0; width: 330px; border-radius: 20px;
             background: #4c8bf5; border: none; color: white; font-size: 26px;
-            transition: all 0.15s ease-out; text-align: center; display: block;
+            transition: all 0.15s ease-out; text-align: center;
         }
         .btn-small { width: 155px; }
-
-        /* 狀態樣式 */
         .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.05); }
-        .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; }
 
-        /* --- 彈窗修復 --- */
+        /* --- 彈窗樣式 --- */
         #profile-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 500; display: none;
         }
-        
-        .tab-btn { 
-            padding: 20px; font-size: 22px; color: white; border-radius: 10px; cursor: pointer; 
-            margin-bottom: 10px; transition: all 0.3s ease; border: 1px solid transparent;
-        }
-
-        .tab-active { 
-            background: transparent !important; 
-            transform: scale(1.15);
-            border: 1px solid rgba(106, 166, 255, 0.5);
-            box-shadow: 0 0 20px rgba(106, 166, 255, 0.4);
-            color: #6aa6ff !important;
-        }
-
+        .tab-btn { padding: 20px; font-size: 22px; color: white; border-radius: 10px; margin-bottom: 10px; transition: all 0.3s; }
+        .tab-active { color: #6aa6ff !important; transform: scale(1.1); border: 1px solid rgba(106, 166, 255, 0.4); }
         .input-field { 
             width: 400px; padding: 15px; font-size: 20px; border-radius: 10px; 
-            border: 1px solid #4c8bf5; background: rgba(255,255,255,0.1); color: white;
-            -webkit-user-select: text; outline: none;
+            border: 1px solid #4c8bf5; background: rgba(255,255,255,0.1); color: white; outline: none;
         }
-        
-        /* 確保按鈕文字清晰顯示 */
         .action-btn {
             margin-top: 35px; border: none; color: white; border-radius: 12px;
-            padding: 15px 40px; font-size: 22px; font-weight: bold; cursor: pointer;
-            transition: transform 0.2s;
+            padding: 12px 45px; font-size: 20px; font-weight: bold;
         }
     </style>
 </head>
@@ -109,11 +80,11 @@
 
     <div class="bg-layer"></div>
     <div id="tooltip"></div>
-    <div id="toast"></div>
+    <div id="toast">提示訊息</div>
 
     <div id="profile-overlay">
-        <div class="interactive" data-tip="關閉" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:40px; cursor:pointer;">✕</div>
-        <div id="modal-container" style="display:flex; height:100%; padding:100px 150px;" onclick="dismissKeyboard(event)">
+        <div class="interactive" data-tip="關閉視窗" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:40px;">✕</div>
+        <div id="modal-container" style="display:flex; height:100%; padding:100px 150px;">
             <div style="width:200px; display:flex; flex-direction:column; gap:20px; border-right:1px solid rgba(255,255,255,0.2);">
                 <div class="interactive tab-btn" id="tab-avatar" data-tip="頭像設定" onclick="switchTab('avatar')">頭像</div>
                 <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
@@ -125,21 +96,15 @@
 
     <div class="lobby-ui">
         <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
-        <div class="interactive player" data-tip="個人資料" onclick="openProfile()">
+        <div class="interactive player" data-tip="開啟玩家資料" onclick="openProfile()">
             <div class="avatar"></div>
             <div>
                 <div class="name" style="font-size: 30px; font-weight: bold;">Fudeya</div>
                 <div class="rank" style="opacity: 0.6; font-size: 18px;">RK 0</div>
             </div>
         </div>
-        <div class="resources">
-            <div>銅: 0</div>
-            <div style="color: #ffd54f;">金線材: 0</div>
-        </div>
-        <div class="interactive settings" data-tip="系統設定">設定</div>
         <div class="menu">
-            <button class="interactive btn" data-tip="進入遊玩" data-target="play.html">遊玩</button>
-            <button class="interactive btn" data-tip="查看筆記" data-target="notebook.html">分析筆記本</button>
+            <button class="interactive btn" data-tip="進入遊戲" data-target="play.html">遊玩</button>
             <div style="display: flex; gap: 20px;">
                 <button class="interactive btn btn-small" data-tip="查看圖鑑" data-target="collection.html">圖鑑</button>
                 <button class="interactive btn btn-small" data-tip="前往商店" data-target="shop.html">店</button>
@@ -154,42 +119,17 @@
         let activeFingerId = null;
         let currentActiveEl = null;
 
-        // 自定義通知函式 (不阻塞進程)
+        // 【重點修正】彈出提示 (不跳出文字視窗)
         function showToast(msg) {
             toast.innerText = msg;
-            toast.style.opacity = '1';
-            toast.style.top = '50px';
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.top = '30px';
-            }, 2500);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        function dismissKeyboard(e) {
-            if (e.target.tagName !== 'INPUT') {
-                const activeInput = document.activeElement;
-                if (activeInput && activeInput.tagName === 'INPUT') {
-                    activeInput.blur();
-                    setTimeout(() => {
-                        window.scrollTo(0, 0);
-                        document.body.scrollTop = 0;
-                    }, 150);
-                }
-            }
-        }
-
-        function handleGlobalClick(e) { dismissKeyboard(e); }
-
-        function openProfile() { 
-            profileOverlay.style.display = 'block'; 
-            switchTab('avatar'); 
-        }
-
+        function openProfile() { profileOverlay.style.display = 'block'; switchTab('avatar'); }
         function closeProfile() { 
-            const activeInput = document.activeElement;
-            if (activeInput) activeInput.blur();
+            document.querySelectorAll('input').forEach(i => i.blur());
             profileOverlay.style.display = 'none'; 
-            tooltip.style.opacity = '0'; 
             window.scrollTo(0, 0); 
         }
 
@@ -198,29 +138,29 @@
             document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('tab-active'));
             if (type === 'avatar') {
                 document.getElementById('tab-avatar').classList.add('tab-active');
-                container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5">目前尚無可更換頭像</p>`;
+                container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5">目前尚未開放更換</p>`;
             } 
             else if (type === 'name') {
                 document.getElementById('tab-name').classList.add('tab-active');
                 container.innerHTML = `<h2>修改玩家名稱</h2>
                     <input type="text" id="newNameInput" class="input-field" placeholder="點擊輸入...">
-                    <br><button class="interactive action-btn" style="background:#4c8bf5;" onclick="saveName()">保存修改</button>`;
+                    <br><button class="interactive action-btn" data-tip="保存名稱修改" style="background:#4c8bf5;" onclick="saveName()">保存修改</button>`;
             } 
             else if (type === 'code') {
                 document.getElementById('tab-code').classList.add('tab-active');
                 container.innerHTML = `<h2>兌換代碼</h2>
                     <input type="text" id="codeInput" class="input-field" placeholder="輸入序號...">
-                    <br><button class="interactive action-btn" style="background:#ffd54f; color:#000;" onclick="redeemCode()">確認兌換</button>`;
+                    <br><button class="interactive action-btn" data-tip="確認兌換代碼" style="background:#ffd54f; color:#000;" onclick="redeemCode()">確認兌換</button>`;
             }
         }
 
         function saveName() {
             const val = document.getElementById('newNameInput').value;
-            if(val) { 
-                document.querySelector('.player .name').innerText = val; 
+            if(val) {
+                document.querySelector('.player .name').innerText = val;
                 document.getElementById('newNameInput').blur();
-                showToast('名稱已更新！');
-                setTimeout(() => window.scrollTo(0, 0), 200);
+                showToast("✅ 名稱已成功儲存！");
+                setTimeout(() => window.scrollTo(0, 0), 100);
             }
         }
 
@@ -228,11 +168,12 @@
             const val = document.getElementById('codeInput').value;
             if(val) {
                 document.getElementById('codeInput').blur();
-                showToast('序號無效，請檢查後再試');
-                setTimeout(() => window.scrollTo(0, 0), 200);
+                showToast("❌ 序號錯誤或已失效");
+                setTimeout(() => window.scrollTo(0, 0), 100);
             }
         }
 
+        // --- 觸控邏輯 ---
         function checkCollision(x, y) {
             let hit = null;
             const isOverlayOpen = profileOverlay.style.display === 'block';
@@ -247,9 +188,9 @@
         function handleMove(x, y) {
             const hitEl = checkCollision(x, y);
             if (hitEl !== currentActiveEl) {
-                if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
+                if (currentActiveEl) currentActiveEl.classList.remove('active-btn');
                 if (hitEl) {
-                    hitEl.classList.add(hitEl.classList.contains('settings') ? 'active-settings' : 'active-btn');
+                    hitEl.classList.add('active-btn');
                     tooltip.innerText = hitEl.getAttribute('data-tip') || "";
                     tooltip.style.opacity = '1';
                 } else { tooltip.style.opacity = '0'; }
@@ -259,10 +200,9 @@
 
         window.addEventListener('touchstart', (e) => {
             const touch = e.changedTouches[0];
-            // 核心修正：如果點擊的不是輸入框，阻止系統預設動作以消除藍框霧化
-            if (touch.target.tagName !== 'INPUT') {
-                e.preventDefault();
-            }
+            // 防止 iOS 藍框：除了 input 以外全都阻止預設
+            if (touch.target.tagName !== 'INPUT') e.preventDefault();
+            
             if (activeFingerId === null) {
                 activeFingerId = touch.identifier;
                 handleMove(touch.clientX, touch.clientY);
@@ -283,7 +223,7 @@
                         const target = currentActiveEl.getAttribute('data-target');
                         if (target) window.location.href = target;
                         else currentActiveEl.click();
-                        currentActiveEl.classList.remove('active-btn', 'active-settings');
+                        currentActiveEl.classList.remove('active-btn');
                     }
                     activeFingerId = null;
                     currentActiveEl = null;
@@ -292,13 +232,11 @@
             }
         });
 
-        // 監控視口變化，確保鍵盤關閉後畫面 100% 歸位
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                if (window.visualViewport.height >= window.innerHeight) {
-                    window.scrollTo(0, 0);
-                }
-            });
+        function handleGlobalClick(e) {
+            if (e.target.tagName !== 'INPUT') {
+                document.querySelectorAll('input').forEach(i => i.blur());
+                setTimeout(() => window.scrollTo(0,0), 100);
+            }
         }
     </script>
 </body>
