@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notebook</title>
+    <style>
+        body {
+            margin: 0; height: 100vh; width: 100vw; overflow: hidden;
+            background: #020617; color: white; font-family: sans-serif;
+            opacity: 0; transition: opacity 0.5s;
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+        .header { padding: 30px 50px; font-size: 28px; border-bottom: 2px solid #4c8bf5; display: flex; justify-content: space-between; }
+        
+        /* 筆記本內容區 */
+        .container {
+            margin: 40px auto; width: 85%; height: 70vh;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px; border: 1px solid rgba(76, 139, 245, 0.3);
+            padding: 30px; overflow-y: auto; /* 內容過長可捲動 */
+        }
+        
+        .entry { margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px; }
+        .entry h3 { color: #4c8bf5; margin-top: 0; }
+
+        .back-btn { position: absolute; bottom: 40px; left: 40px; padding: 15px 40px; border-radius: 12px; background: #4c8bf5; border: none; color: white; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span>分析筆記本 / Analysis Notebook</span>
+        <span style="opacity: 0.5; font-size: 18px;">DATA_0102</span>
+    </div>
+
+    <div class="container">
+        <div class="entry">
+            <h3>觀察紀錄 #01</h3>
+            <p>在這裡輸入你的分析內容... 這種佈局適合長文本閱讀。</p>
+        </div>
+    </div>
+
+    <button class="back-btn" onclick="goBack()">返回大廳</button>
+
+    <script>
+        window.onload = () => { document.body.style.opacity = '1'; };
+        function goBack() { document.body.style.opacity = '0'; setTimeout(() => { window.location.href = 'index.html'; }, 500); }
+    </script>
+</body>
+</html>
