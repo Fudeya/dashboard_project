@@ -195,36 +195,28 @@
             }
         }
 
-        // 防止 iOS 鍵盤彈出偏移
-        document.addEventListener('focusin', () => { window.scrollTo(0, 0); });
-        document.addEventListener('focusout', () => { window.scrollTo(0, 0); });
+      // 核心修正：監聽視窗高度變化
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        const vh = window.visualViewport.height;
+        // 鍵盤彈出時，vh 會變小。我們強制讓整個內容物「縮小」或「下移」
+        document.documentElement.style.height = vh + "px";
+        
+        // 強制捲動到最頂端，不准 Safari 亂推
+        window.scrollTo(0, 0);
+    });
+}
 
-        window.addEventListener('touchstart', (e) => {
-            if (activeFingerId === null) {
-                activeFingerId = e.changedTouches[0].identifier;
-                handleMove(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchmove', (e) => {
-            for (let t of e.changedTouches) {
-                if (t.identifier === activeFingerId) handleMove(t.clientX, t.clientY);
-            }
-            e.preventDefault();
-        }, { passive: false });
-
-        window.addEventListener('touchend', (e) => {
-            for (let t of e.changedTouches) {
-                if (t.identifier === activeFingerId) {
-                    if (currentActiveEl) {
-                        const target = currentActiveEl.getAttribute('data-target');
-                        if (target) window.location.href = target;
-                        else currentActiveEl.click();
-                    }
-                    activeFingerId = null;
-                }
-            }
-        });
+// 針對輸入框點擊時的額外補強
+document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT') {
+        // 延遲一點點執行，防止 Safari 的預設推擠
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+        }, 100);
+    }
+});
     </script>
 </body>
 </html>
