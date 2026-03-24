@@ -3,212 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Lobby - Final Version</title>
+    <title>Game Lobby - Professional Touch</title>
 
     <style>
-        /* 1. 全域鎖定與背景 */
         body {
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden; /* 禁止滑動 */
-            font-family: sans-serif;
-            color: white;
-            background:
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(135deg,#020617,#0a1b3a);
+            margin: 0; height: 100vh; width: 100vw; overflow: hidden;
+            font-family: sans-serif; color: white;
+            background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                        linear-gradient(135deg,#020617,#0a1b3a);
             background-size: 40px 40px, 40px 40px, cover;
             animation: gridMove 20s linear infinite;
-
-            /* 禁止選取文字與系統預設行為 */
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: none; /* 徹底鎖定觸控滑動 */
-            cursor: default;
+            user-select: none; -webkit-user-select: none;
+            touch-action: none; /* 完全接管觸控 */
         }
 
-        @keyframes gridMove {
-            0% { background-position: 0 0, 0 0, 0 0; }
-            100% { background-position: -40px 40px, -40px 40px, 0 0; }
+        @keyframes gridMove { 
+            0% { background-position: 0 0; } 100% { background-position: -40px 40px; } 
         }
 
-        /* 2. 固定在下方的提示框 (Tooltip) */
+        /* 提示框 */
         #tooltip {
-            position: fixed;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            pointer-events: none;
-            background: rgba(60, 60, 60, 0.7);
-            backdrop-filter: blur(8px);
-            padding: 10px 30px;
-            border-radius: 15px;
-            font-size: 18px;
-            opacity: 0; /* 預設透明 */
-            transition: opacity 0.15s ease;
-            z-index: 100;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(60, 60, 60, 0.8); backdrop-filter: blur(8px);
+            padding: 12px 40px; border-radius: 15px; font-size: 20px;
+            opacity: 0; transition: opacity 0.1s; z-index: 100;
         }
 
-        /* 3. 角色展示 (8秒浮動) */
+        /* 角色 (8秒浮動) */
         .character {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 50%;
-            height: 90%;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 5;
+            position: absolute; bottom: 30px; left: 30px; width: 50%; height: 90%;
+            display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
         }
-        .character img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            animation: floating 8s ease-in-out infinite;
-        }
-        @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-25px); }
-        }
+        .character img { max-height: 100%; animation: floating 8s ease-in-out infinite; }
+        @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); } }
 
-        /* 4. 玩家資訊與資源 (排除在動畫外) */
-        .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; pointer-events: none; }
-        .avatar { width: 70px; height: 70px; border-radius: 15px; background: #ddd; border: 2px solid rgba(255,255,255,0.2); }
-        .resources { position: absolute; bottom: 80px; left: 80px; pointer-events: none; }
-        .gold { color: #ffd54f; }
+        /* 介面文字 */
+        .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 80px; height: 80px; border-radius: 20px; background: #ddd; }
+        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 20px; }
 
-        /* 5. 按鈕基本樣式 */
-        .settings, .btn {
-            cursor: pointer;
-            transition: background 0.15s, box-shadow 0.15s;
-            z-index: 20;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        /* 按鈕樣式恢復與放大 */
         .settings {
-            position: absolute; top: 25%; left: 60%;
-            transform: translate(-50%, -50%);
-            width: 120px; height: 120px;
-            background: white; color: black; font-weight: bold;
+            position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
+            width: 150px; height: 150px; background: white; color: black; font-weight: bold;
             clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            transition: all 0.1s ease-out;
         }
 
-        .menu {
-            position: absolute; right: 50px; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 25px;
-        }
+        .menu { position: absolute; right: 60px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
         .btn {
-            padding: 20px 0; width: 280px; border-radius: 15px;
-            background: #4c8bf5; border: none; color: white; font-size: 20px;
-            text-align: center;
+            padding: 25px 0; width: 320px; border-radius: 18px; /* 寬度加大 */
+            background: #4c8bf5; border: none; color: white; font-size: 24px;
+            transition: all 0.1s ease-out; text-align: center;
         }
         .bottom-menu { display: flex; gap: 20px; }
-        .btn-small { width: 130px; }
+        .btn-small { width: 150px; }
 
-        /* 懸停發光效果 */
-        .btn:hover { background: #6aa6ff; box-shadow: 0 0 20px rgba(106, 166, 255, 0.6); }
-        .settings:hover { background: #eeeeee; }
-
-        /* 6. 「放開後即執行」的動畫類別 */
-        .anim-release-hex { animation: hexPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .anim-release-btn { animation: btnPop 0.3s ease-out; }
-
-        @keyframes hexPop {
-            0% { transform: translate(-50%, -50%) scale(0.9); }
-            40% { transform: translate(-50%, -50%) scale(1.2) rotate(20deg); }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        /* 啟動狀態 (由 JS 控制) */
+        .active-btn { 
+            background: #6aa6ff !important; 
+            box-shadow: 0 0 30px rgba(106, 166, 255, 0.9);
+            transform: scale(1.1); 
+        }
+        .active-settings { 
+            background: #eeeeee !important; 
+            transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; 
         }
 
-        @keyframes btnPop {
-            0% { transform: scale(0.95); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-        }
+        /* 最終執行回彈動畫 */
+        .pop-anim { animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: scale(1.1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
-
 <body oncontextmenu="return false;">
 
     <div id="tooltip"></div>
 
-    <div class="character">
-        <img src="baikui_normal.png" alt="Character">
-    </div>
+    <div class="character"><img src="baikui_normal.png"></div>
 
     <div class="player">
         <div class="avatar"></div>
-        <div>
-            <div class="name">Fudeya</div>
-            <div class="rank">RK 0</div>
-        </div>
+        <div><div style="font-size: 26px;">Fudeya</div><div style="opacity: 0.6;">RK 0</div></div>
     </div>
 
     <div class="resources">
-        <div>銅幣: 0</div>
-        <div class="gold">金元素: 0</div>
+        <div>銅: 0</div>
+        <div style="color: #ffd54f;">金線材: 0</div>
     </div>
 
-    <div class="settings" data-tip="設定">設定</div>
+    <div class="interactive settings" data-tip="設定">設定</div>
 
     <div class="menu">
-        <button class="btn" data-tip="進入遊戲">遊玩</button>
-        <button class="btn" data-tip="查看分析資料">分析筆記本</button>
+        <button class="interactive btn" data-tip="進入遊戲">遊玩</button>
+        <button class="interactive btn" data-tip="查看分析資料">分析筆記本</button>
         <div class="bottom-menu">
-            <button class="btn btn-small" data-tip="收藏圖鑑">圖鑑</button>
-            <button class="btn btn-small" data-tip="道具商店">店</button>
+            <button class="interactive btn btn-small" data-tip="收藏圖鑑">圖鑑</button>
+            <button class="interactive btn btn-small" data-tip="道具商店">店</button>
         </div>
     </div>
 
     <script>
         const tooltip = document.getElementById('tooltip');
-        
-        // 取得所有具有提示訊息的元素
-        document.querySelectorAll('[data-tip]').forEach(el => {
+        const elements = document.querySelectorAll('.interactive');
+        let activeFingerId = null; // 鎖定第一隻手指
+        let currentActiveEl = null;
+
+        function checkCollision(x, y) {
+            let hit = null;
+            elements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    hit = el;
+                }
+            });
+            return hit;
+        }
+
+        function handleMove(x, y) {
+            const hitEl = checkCollision(x, y);
             
-            // 觸發提示框
-            el.addEventListener('pointerenter', (e) => {
-                tooltip.innerText = e.currentTarget.getAttribute('data-tip');
-                tooltip.style.opacity = '1';
-            });
+            if (hitEl !== currentActiveEl) {
+                // 清除舊的狀態
+                if (currentActiveEl) {
+                    currentActiveEl.classList.remove('active-btn', 'active-settings');
+                    tooltip.style.opacity = '0';
+                }
+                // 設定新的狀態
+                if (hitEl) {
+                    const isSettings = hitEl.classList.contains('settings');
+                    hitEl.classList.add(isSettings ? 'active-settings' : 'active-btn');
+                    tooltip.innerText = hitEl.getAttribute('data-tip');
+                    tooltip.style.opacity = '1';
+                }
+                currentActiveEl = hitEl;
+            }
+        }
 
-            // 關閉提示框
-            el.addEventListener('pointerleave', () => {
-                tooltip.style.opacity = '0';
-            });
+        // 觸控開始
+        window.addEventListener('touchstart', (e) => {
+            if (activeFingerId === null) {
+                activeFingerId = e.changedTouches[0].identifier;
+                const touch = e.changedTouches[0];
+                handleMove(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
 
-            // 【放開時即執行動畫】的核心邏輯
-            el.addEventListener('pointerup', (e) => {
-                const target = e.currentTarget;
-                const isSettings = target.classList.contains('settings');
-                const animClass = isSettings ? 'anim-release-hex' : 'anim-release-btn';
-
-                // 移除舊動畫並重啟
-                target.classList.remove(animClass);
-                void target.offsetWidth; // 觸發瀏覽器重繪，讓動畫可以重複執行
-                target.classList.add(animClass);
-
-                // 動畫結束後移除標籤
-                setTimeout(() => {
-                    target.classList.remove(animClass);
-                }, 400);
-                
-                // 這裡可以加入你之後要執行的功能程式碼
-                console.log("觸發了：" + target.innerText);
-            });
-        });
-
-        // 額外保險：禁止畫面上任何形式的滾動
-        document.addEventListener('touchmove', function(e) {
+        // 觸控移動 (隨時偵測位置)
+        window.addEventListener('touchmove', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === activeFingerId) {
+                    const touch = e.changedTouches[i];
+                    handleMove(touch.clientX, touch.clientY);
+                }
+            }
             e.preventDefault();
         }, { passive: false });
-    </script>
 
+        // 觸控結束
+        window.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === activeFingerId) {
+                    if (currentActiveEl) {
+                        // 只有在按鈕範圍內放開才執行
+                        currentActiveEl.classList.add('pop-anim');
+                        console.log("執行功能: " + currentActiveEl.innerText);
+                        
+                        const elToClean = currentActiveEl;
+                        setTimeout(() => elToClean.classList.remove('pop-anim'), 300);
+                    }
+                    
+                    // 重置狀態
+                    if (currentActiveEl) {
+                        currentActiveEl.classList.remove('active-btn', 'active-settings');
+                    }
+                    currentActiveEl = null;
+                    activeFingerId = null;
+                    tooltip.style.opacity = '0';
+                }
+            }
+        });
+
+        // 桌面端滑鼠支持 (可選)
+        window.addEventListener('mousedown', (e) => { handleMove(e.clientX, e.clientY); });
+        window.addEventListener('mousemove', (e) => { if(e.buttons > 0) handleMove(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => { 
+            if(currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
+            currentActiveEl = null; tooltip.style.opacity = '0'; 
+        });
+
+    </script>
 </body>
 </html>
