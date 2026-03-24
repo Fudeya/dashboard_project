@@ -3,35 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Game Lobby - Spring Back Mode</title>
+    <title>Game Lobby - Spring Back Fix</title>
     <style>
-        /* --- 1. 允許捲動，但隱藏捲軸軌跡 --- */
+        /* 允許捲動，但隱藏捲軸 */
         html, body {
             margin: 0; padding: 0;
             width: 100%; min-height: 100%;
             overflow-x: hidden;
-            overflow-y: auto; /* 允許主動滑動 */
+            overflow-y: auto;
             background: #020617;
             font-family: sans-serif;
             color: white;
-            -webkit-overflow-scrolling: touch; /* 讓滑動有慣性 */
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* --- 2. 擴大背景層：防止位移時露白 --- */
-        .bg-layer {
-            position: fixed; 
-            top: -10vh; left: -10vw; 
-            width: 120vw; 
-            height: 120vh;
-            background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                        linear-gradient(135deg,#020617,#0a1b3a);
-            background-size: 40px 40px, 40px 40px, cover;
-            z-index: -1;
-            pointer-events: none;
-        }
+        /* 擴大背景層：防止位移時露白 */
+        /* --- 擴大背景層：徹底覆蓋捲動邊界 --- */
+.bg-layer {
+    position: fixed; 
+    /* 讓背景往上下左右各延伸 50%，確保怎麼滑都滑不出邊界 */
+    top: -50vh; 
+    left: -50vw; 
+    width: 200vw; 
+    height: 200vh;
+    
+    /* 保持你的方格設計 */
+    background: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(135deg,#020617,#0a1b3a);
+    background-size: 40px 40px, 40px 40px, cover;
+    
+    z-index: -1;
+    pointer-events: none;
+    
+    /* 讓背景跟著稍微位移（可選），增加空間感 */
+    transform: translateZ(0); 
+}
 
-        /* --- 3. 主 UI 佈局 --- */
         #main-ui {
             position: relative;
             width: 100vw;
@@ -44,8 +52,14 @@
         .player { position: absolute; top: 50px; left: 80px; display: flex; align-items: center; gap: 15px; cursor: pointer; z-index: 20; }
         .avatar { width: 85px; height: 85px; border-radius: 20px; background: #ddd; border: 3px solid rgba(255,255,255,0.2); }
         
-        .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 30px; }
-        .btn { padding: 28px 0; width: 330px; border-radius: 20px; background: #4c8bf5; border: none; color: white; font-size: 26px; cursor: pointer; }
+        /* 資源欄位 */
+        .resources { position: absolute; bottom: 80px; left: 80px; font-size: 22px; pointer-events: none; color: white; }
+
+        /* 右側選單區 */
+        .menu { position: absolute; right: 65px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 25px; }
+        .btn { padding: 25px 0; width: 330px; border-radius: 20px; background: #4c8bf5; border: none; color: white; font-size: 26px; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); background: #357ae8; }
+        .btn-small { width: 152px; }
 
         .settings {
             position: absolute; top: 25%; left: 60%; transform: translate(-50%, -50%);
@@ -54,7 +68,7 @@
             display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold;
         }
 
-        /* --- 4. 彈窗與輸入 --- */
+        /* 彈窗樣式 */
         #profile-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
@@ -63,12 +77,7 @@
 
         .tab-btn { padding: 20px; font-size: 22px; color: white; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; margin-bottom: 15px; text-align: center; }
         .tab-active { background: #4c8bf5 !important; }
-        
-        .input-field { 
-            width: 400px; padding: 15px; font-size: 22px; border-radius: 10px; 
-            border: 2px solid #4c8bf5; background: #000; color: white; 
-            margin-top: 20px;
-        }
+        .input-field { width: 400px; padding: 15px; font-size: 22px; border-radius: 10px; border: 2px solid #4c8bf5; background: #000; color: white; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -77,22 +86,34 @@
 
 <div id="main-ui">
     <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
+    
     <div class="player" onclick="openProfile()">
         <div class="avatar"></div>
-        <div class="name-area">
+        <div>
             <div class="name" style="font-size: 30px; font-weight: bold;">Fudeya</div>
             <div class="rank" style="opacity: 0.6; font-size: 18px;">RK 0</div>
         </div>
     </div>
-    <div class="settings" onclick="alert('設定')">設定</div>
+
+    <div class="resources">
+        <div>銅: 0</div>
+        <div style="color: #ffd54f;">金線材: 0</div>
+    </div>
+
+    <div class="settings" onclick="alert('設定暫未開放')">設定</div>
+
     <div class="menu">
         <button class="btn" onclick="location.href='play.html'">遊玩</button>
         <button class="btn" onclick="location.href='notebook.html'">分析筆記本</button>
+        <div style="display: flex; gap: 26px;">
+            <button class="btn btn-small" onclick="location.href='collection.html'">圖鑑</button>
+            <button class="btn btn-small" onclick="location.href='shop.html'">店</button>
+        </div>
     </div>
 </div>
 
 <div id="profile-overlay">
-    <div onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:45px; cursor:pointer; z-index:600;">✕</div>
+    <div onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:45px; cursor:pointer;">✕</div>
     <div style="display:flex; height:100%; padding:80px 100px;">
         <div style="width:220px; border-right:1px solid rgba(255,255,255,0.2); padding-top:40px;">
             <div class="tab-btn" id="tab-avatar" onclick="switchTab('avatar')">頭像</div>
@@ -122,10 +143,10 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
         if (type === 'avatar') {
             document.getElementById('tab-avatar').classList.add('tab-active');
-            container.innerHTML = `<h1>頭像設定</h1>`;
+            container.innerHTML = `<h1>頭像設定</h1><p>功能開發中...</p>`;
         } else if (type === 'name') {
             document.getElementById('tab-name').classList.add('tab-active');
-            container.innerHTML = `<h1>修改名稱</h1><input type="text" id="newNameInput" class="input-field" placeholder="輸入名字..."><br><button onclick="saveName()" style="margin-top:20px; padding:10px 30px;">儲存</button>`;
+            container.innerHTML = `<h1>修改名稱</h1><input type="text" id="newNameInput" class="input-field" placeholder="輸入名字..."><br><button class="btn" style="margin-top:20px; width:150px; font-size:20px; padding:10px 0;" onclick="saveName()">儲存</button>`;
         } else if (type === 'code') {
             document.getElementById('tab-code').classList.add('tab-active');
             container.innerHTML = `<h1>兌換碼</h1><input type="text" class="input-field" placeholder="輸入序號...">`;
@@ -134,33 +155,28 @@
 
     function saveName() {
         const val = document.getElementById('newNameInput').value;
-        if(val) { document.querySelector('.player .name').innerText = val; alert('OK'); springBack(); }
+        if(val) { document.querySelector('.player .name').innerText = val; alert('名稱已更新'); springBack(); }
     }
 
-    // --- 磁吸歸位核心邏輯 ---
+    // 強制歸位函數
     function springBack() {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
 
-    // 監測觸摸結束
+    // 監控使用者動作
     window.addEventListener('touchstart', () => { isTouching = true; });
     window.addEventListener('touchend', () => { 
         isTouching = false; 
-        // 延遲一下歸位，讓滑動感自然一點
-        setTimeout(() => { if(!isTouching) springBack(); }, 1500); 
+        setTimeout(() => { if(!isTouching) springBack(); }, 1200); 
     });
 
-    // 鍵盤收起時強制歸位
-    document.addEventListener('focusout', () => {
-        setTimeout(springBack, 300);
-    });
+    document.addEventListener('focusout', () => { setTimeout(springBack, 300); });
 
-    // 萬一捲動超過範圍自動拉回
+    // 如果頁面位置偏移，則自動拉回
     window.addEventListener('scroll', () => {
         if (!isTouching && window.scrollY !== 0) {
-            // 如果不是在使用中，且位置偏移了，就拉回來
             clearTimeout(window.scrollTimeout);
-            window.scrollTimeout = setTimeout(springBack, 500);
+            window.scrollTimeout = setTimeout(springBack, 800);
         }
     });
 </script>
