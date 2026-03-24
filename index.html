@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Game Lobby - Fixed</title>
+    <title>Game Lobby - Fixed Final v2</title>
     <style>
-        /* --- 1. 物理鎖定與禁止選取 --- */
+        /* --- 1. 基礎鎖定與禁用預設特效 --- */
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; position: fixed; background: #020617;
             font-family: sans-serif; touch-action: none;
-            /* 修復圖 1：禁止長按選取 */
-            -webkit-user-select: none; 
-            user-select: none;
+            -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- 背景與 UI --- */
         .bg-layer {
             position: fixed; 
             top: -50vh; left: -50vw; width: 200vw; height: 200vh;
@@ -58,11 +58,10 @@
         }
         .btn-small { width: 155px; }
 
-        /* 動態類名 */
         .active-btn { background: #6aa6ff !important; box-shadow: 0 0 35px rgba(106, 166, 255, 0.9); transform: scale(1.1); }
         .active-settings { background: #f0f0f0 !important; transform: translate(-50%, -50%) scale(1.1) rotate(15deg) !important; }
 
-        /* 彈窗 */
+        /* --- 彈窗修復 --- */
         #profile-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 500; display: none;
@@ -73,7 +72,6 @@
             margin-bottom: 10px; transition: all 0.3s ease; border: 1px solid transparent;
         }
 
-        /* 修復圖 2：移除藍色背景，改為放大與發光 */
         .tab-active { 
             background: transparent !important; 
             transform: scale(1.15);
@@ -85,22 +83,20 @@
         .input-field { 
             width: 400px; padding: 15px; font-size: 20px; border-radius: 10px; 
             border: 1px solid #4c8bf5; background: rgba(255,255,255,0.1); color: white;
-            -webkit-user-select: text; /* 允許輸入框選取文字 */
+            -webkit-user-select: text; outline: none;
         }
         
-        /* 修復圖 4：按鈕與輸入框的間距補強 */
         .save-btn-ui { margin-top: 35px !important; }
-
     </style>
 </head>
-<body>
+<body onclick="handleGlobalClick(event)">
 
     <div class="bg-layer"></div>
     <div id="tooltip"></div>
 
     <div id="profile-overlay">
         <div class="interactive" data-tip="關閉" onclick="closeProfile()" style="position:absolute; top:40px; left:40px; width:60px; height:60px; color:white; font-size:40px; cursor:pointer;">✕</div>
-        <div style="display:flex; height:100%; padding:100px 150px;">
+        <div id="modal-container" style="display:flex; height:100%; padding:100px 150px;" onclick="dismissKeyboard(event)">
             <div style="width:200px; display:flex; flex-direction:column; gap:20px; border-right:1px solid rgba(255,255,255,0.2);">
                 <div class="interactive tab-btn" id="tab-avatar" data-tip="頭像設定" onclick="switchTab('avatar')">頭像</div>
                 <div class="interactive tab-btn" id="tab-name" data-tip="修改名稱" onclick="switchTab('name')">姓名</div>
@@ -110,29 +106,27 @@
         </div>
     </div>
 
-    <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
-
-    <div class="interactive player" data-tip="點擊開啟個人資料" onclick="openProfile()">
-        <div class="avatar"></div>
-        <div>
-            <div class="name" style="font-size: 30px; font-weight: bold;">Fudeya</div>
-            <div class="rank" style="opacity: 0.6; font-size: 18px;">RK 0</div>
+    <div class="lobby-ui">
+        <div class="character"><img src="baikui_normal.png" alt="baikui"></div>
+        <div class="interactive player" data-tip="點擊開啟個人資料" onclick="openProfile()">
+            <div class="avatar"></div>
+            <div>
+                <div class="name" style="font-size: 30px; font-weight: bold;">Fudeya</div>
+                <div class="rank" style="opacity: 0.6; font-size: 18px;">RK 0</div>
+            </div>
         </div>
-    </div>
-
-    <div class="resources">
-        <div>銅: 0</div>
-        <div style="color: #ffd54f;">金線材: 0</div>
-    </div>
-
-    <div class="interactive settings" data-tip="系統設定">設定</div>
-
-    <div class="menu">
-        <button class="interactive btn" data-tip="進入遊玩" data-target="play.html">遊玩</button>
-        <button class="interactive btn" data-tip="查看筆記" data-target="notebook.html">分析筆記本</button>
-        <div style="display: flex; gap: 20px;">
-            <button class="interactive btn btn-small" data-tip="查看圖鑑" data-target="collection.html">圖鑑</button>
-            <button class="interactive btn btn-small" data-tip="前往商店" data-target="shop.html">店</button>
+        <div class="resources">
+            <div>銅: 0</div>
+            <div style="color: #ffd54f;">金線材: 0</div>
+        </div>
+        <div class="interactive settings" data-tip="系統設定">設定</div>
+        <div class="menu">
+            <button class="interactive btn" data-tip="進入遊玩" data-target="play.html">遊玩</button>
+            <button class="interactive btn" data-tip="查看筆記" data-target="notebook.html">分析筆記本</button>
+            <div style="display: flex; gap: 20px;">
+                <button class="interactive btn btn-small" data-tip="查看圖鑑" data-target="collection.html">圖鑑</button>
+                <button class="interactive btn btn-small" data-tip="前往商店" data-target="shop.html">店</button>
+            </div>
         </div>
     </div>
 
@@ -142,27 +136,46 @@
         let activeFingerId = null;
         let currentActiveEl = null;
 
-        function openProfile() { profileOverlay.style.display = 'block'; switchTab('avatar'); }
-        function closeProfile() { profileOverlay.style.display = 'none'; tooltip.style.opacity = '0'; window.scrollTo(0,0); }
+        function dismissKeyboard(e) {
+            if (e.target.tagName !== 'INPUT') {
+                const activeInput = document.activeElement;
+                if (activeInput && activeInput.tagName === 'INPUT') {
+                    activeInput.blur();
+                    setTimeout(() => window.scrollTo(0, 0), 100);
+                }
+            }
+        }
+
+        function handleGlobalClick(e) { dismissKeyboard(e); }
+
+        function openProfile() { 
+            profileOverlay.style.display = 'block'; 
+            switchTab('avatar'); 
+        }
+
+        function closeProfile() { 
+            const activeInput = document.activeElement;
+            if (activeInput) activeInput.blur();
+            profileOverlay.style.display = 'none'; 
+            tooltip.style.opacity = '0'; 
+            window.scrollTo(0, 0); 
+        }
 
         function switchTab(type) {
             const container = document.getElementById('tab-content');
             document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('tab-active'));
-            
             if (type === 'avatar') {
                 document.getElementById('tab-avatar').classList.add('tab-active');
                 container.innerHTML = `<h2>頭像設定</h2><p style="opacity:0.5">目前尚無可更換頭像</p>`;
             } 
             else if (type === 'name') {
                 document.getElementById('tab-name').classList.add('tab-active');
-                // 修復圖 4：增加 margin-top 給按鈕
                 container.innerHTML = `<h2>修改玩家名稱</h2>
                     <input type="text" id="newNameInput" class="input-field" placeholder="點擊輸入...">
                     <br><button class="interactive btn btn-small save-btn-ui" style="font-size:18px; padding:10px;" onclick="saveName()">保存修改</button>`;
             } 
             else if (type === 'code') {
                 document.getElementById('tab-code').classList.add('tab-active');
-                // 修復圖 3：補回確認按鈕
                 container.innerHTML = `<h2>兌換代碼</h2>
                     <input type="text" id="codeInput" class="input-field" placeholder="輸入序號...">
                     <br><button class="interactive btn btn-small save-btn-ui" style="font-size:18px; padding:10px; background:#ffd54f; color:black;" onclick="alert('序號無效')">確認兌換</button>`;
@@ -171,12 +184,23 @@
 
         function saveName() {
             const val = document.getElementById('newNameInput').value;
-            if(val) { document.querySelector('.player .name').innerText = val; alert('名稱修改成功！'); }
+            if(val) { 
+                document.querySelector('.player .name').innerText = val; 
+                alert('名稱修改成功！');
+                document.getElementById('newNameInput').blur();
+            }
         }
 
+        // --- 關鍵修正：碰撞偵測過濾器 ---
         function checkCollision(x, y) {
             let hit = null;
+            // 判定彈窗是否開啟
+            const isOverlayOpen = profileOverlay.style.display === 'block';
+            
             document.querySelectorAll('.interactive').forEach(el => {
+                // 如果彈窗開啟，忽略所有「不在彈窗內」的元素
+                if (isOverlayOpen && !profileOverlay.contains(el)) return;
+                
                 const rect = el.getBoundingClientRect();
                 if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) hit = el;
             });
@@ -186,18 +210,12 @@
         function handleMove(x, y) {
             const hitEl = checkCollision(x, y);
             if (hitEl !== currentActiveEl) {
-                // 當手指判定位置離開舊按鈕時，移除動畫類名
-                if (currentActiveEl) {
-                    currentActiveEl.classList.remove('active-btn', 'active-settings');
-                }
-                
+                if (currentActiveEl) currentActiveEl.classList.remove('active-btn', 'active-settings');
                 if (hitEl) {
                     hitEl.classList.add(hitEl.classList.contains('settings') ? 'active-settings' : 'active-btn');
                     tooltip.innerText = hitEl.getAttribute('data-tip') || "";
                     tooltip.style.opacity = '1';
-                } else { 
-                    tooltip.style.opacity = '0'; 
-                }
+                } else { tooltip.style.opacity = '0'; }
                 currentActiveEl = hitEl;
             }
         }
@@ -223,8 +241,6 @@
                         const target = currentActiveEl.getAttribute('data-target');
                         if (target) window.location.href = target;
                         else currentActiveEl.click();
-                        
-                        // 點擊後立即清除動畫狀態，避免殘留
                         currentActiveEl.classList.remove('active-btn', 'active-settings');
                     }
                     activeFingerId = null;
@@ -237,7 +253,7 @@
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => { window.scrollTo(0, 0); });
         }
-        document.addEventListener('focusout', () => { window.scrollTo(0, 0); });
+        document.addEventListener('focusout', () => { setTimeout(() => window.scrollTo(0, 0), 200); });
     </script>
 </body>
 </html>
